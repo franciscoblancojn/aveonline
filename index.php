@@ -26,6 +26,7 @@ Copyright 2020 Startsco, Inc.
 //     exit;
 // }
 
+require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-api.php';
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-shipping-method.php';
 // // initialize plugin
 // function init_aveonline()

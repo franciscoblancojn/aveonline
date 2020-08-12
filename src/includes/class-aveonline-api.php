@@ -6,25 +6,22 @@
  * Handless Aveonline API calls and authorization.
  *
  */
-class AveonlineAPI extends AveonlineShippingPlugin
+class AveonlineAPI 
 {
     private $API_URL_AUTHENTICATE = 'https://aveonline.co/api/comunes/v1.0/autenticarusuario.php';
-    private $authenticate_data = null; //get object of api 
     private $API_URL_AGENTE = "https://aveonline.co/api/comunes/v1.0/agentes.php";
-    private $agente_data = null;
     private $API_URL_CITY = "https://aveonline.co/api/box/v1.0/ciudad.php";
+    private $API_URL_QUOTE = "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php";
+
+
+
+    private $authenticate_data = null; //get object of api 
+    private $agente_data = null;
     private $city_data = null; //get object of api
     private $city_api = null;
-    private $API_URL_QUOTE = "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php";
     private $quote = null;
 
     private $p_valordeclarado = 100;
-
-
-    const API_URL_COTIZAR   = 'https://www.aveonline.co/app/modulos/webservices/ws.cotizar.transporte.php?wsdl';
-    const API_URL_TRAYECTOS = 'https://www.aveonline.co/app/modulos/webservices/ws.listar.trayectos.php?wsdl';
-    const API_URL_CIUDADES  = 'https://www.aveonline.co/app/modulos/webservices/ws.consultar.ciudades.php?wsdl';
-    const API_URL_GUIAS     = 'https://aveonline.co/app/modulos/webservices/ws.generar.guia.recaudos.php?wsdl';
 
     private $user; // api key for API authentication (Provided by Coordinadora)
     private $password; // api password for API authentication (Provided by Coordinadora)
@@ -35,107 +32,29 @@ class AveonlineAPI extends AveonlineShippingPlugin
 
 
 
-    public function __construct($user = "", $password = "", $agentId = "", $city_api = null, $p_valordeclarado = 100)
+    public function __construct($atts = array(), $load = true)
     {
         // api variables
-        $this->user     = $user;
-        $this->password = $password;
-        $this->agentId  = $agentId;
-        $this->city_api = $city_api;
-        $this->p_valordeclarado = $p_valordeclarado;
-        // caching variables
-        $this->locations = array();
+        $this->atts = $atts;
 
-        // internal useful variables
-        $this->testing = true;
-    }
-
-    /**
-     * Remove some sepcial charecters from strings just like accents and umlauts
-     *
-     * @param sting $str
-     * @return string
-     */
-    public static function clean_string($str)
-    {
-        $forbidden_chars = array("á", "é", "í", "ó", "ú", "Á", "É", "Í", "Ó", "Ú", "ñ", "ü");
-        $allowed_chars = array("a", "e", "i", "o", "u", "A", "E", "I", "O", "U", "n", "u");
-        $out = str_replace($forbidden_chars, $allowed_chars, $str);
-        return $out;
-    }
-    
-
-    /**
-     * Returns a state's full name from ISO state code
-     *
-     * @param string $code  ISO state code
-     * @return string
-     */
-    private static function get_regions_conversion($code)
-    {
-        $regions = array(
-            'AMZ' => 'amazonas',
-            'ANT' => 'antioquia',
-            'ARU' => 'arauca',
-            'ATL' => 'atlantico',
-            'BOL' => 'bolivar',
-            'BOY' => 'boyaca',
-            'CAL' => 'caldas',
-            'CAQ' => 'caqueta',
-            'CAS' => 'casanare',
-            'CAU' => 'cauca',
-            'CES' => 'cesar',
-            'CHOC' => 'choco',
-            'COR' => 'cordoba',
-            'CUN' => 'cundinamarca',
-            'GUA' => 'guainia',
-            'GUV' => 'guaviare',
-            'HUI' => 'huila',
-            'GUJ' => 'la Guajira',
-            'MAG' => 'magdalena',
-            'MET' => 'meta',
-            'NAR' => 'nariño',
-            'NOR' => 'norte de Santander',
-            'PUT' => 'putumayo',
-            'QUI' => 'quindio',
-            'RIS' => 'risaralda',
-            'SAP' => 'san Andres',
-            'SAN' => 'santander',
-            'SUC' => 'sucre',
-            'TOL' => 'tolima',
-            'VAC' => 'valle del Cauca',
-            'VAU' => 'vaupes',
-            'VIC' => 'vichada',
-        );
-
-        $code = strtoupper($code);
-
-        if (isset($regions[$code])) {
-            $region = $regions[$code];
-        } elseif (in_array(strtolower($code), array_values($regions))) {
-            $region = $code;
+        if($load){
+            $this->authenticate();
         }
+    }
 
-        return $region;
-    }
-    public function get_API_URL_AUTHENTICATE()
-    {
-        return $this->API_URL_AUTHENTICATE;
-    }
-    public function authenticate()
+    public function authenticate($atts = array(), $set = true)
     {
         $json_body = '
             {
                 "tipo":"auth",
-                "usuario":"' . $this->user . '",
-                "clave":"' . $this->password . '"
+                "usuario":"' . (isset($atts['user'])?$atts['user']:$this->atts['user']) . '",
+                "clave":"' . (isset($atts['password'])?$atts['password']:$this->atts['password']) . '"
             }
         ';
-
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->get_API_URL_AUTHENTICATE(),
+            CURLOPT_URL => $this->API_URL_AUTHENTICATE,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -152,53 +71,70 @@ class AveonlineAPI extends AveonlineShippingPlugin
         $response = curl_exec($curl);
 
         curl_close($curl);
-
-        $this->authenticate_data = json_decode($response);
-
-        return json_decode($response);
+        if($set){
+            $this->authenticate_data = json_decode($response);
+        }else{
+            return json_decode($response);
+        }
     }
-    public function get_API_URL_AGENTE()
-    {
-        return $this->API_URL_AGENTE;
-    }
-    public function get_agentes()
+    public function get_agentes($atts = null, $set = true)
     {
         //validar usuario
         if ($this->authenticate_data === null) {
-            return "Invalid";
+            return array('status'=>'error','error'=>'no user data');
         }
         if ($this->authenticate_data->status !== "ok") {
-            return "Invalid";
+            return array('status'=>'error','error'=>'no user data');
         }
-
-        $json_body = '
-            {
-                "tipo":"listarAgentesPorEmpresaAuth",
-                "token":"' . $this->authenticate_data->token . '",
-                "idempresa":"' . $this->authenticate_data->cuentas[0]->usuarios[0]->id . '"
+        if($atts == null){
+            $atts = [];
+            $count_user = 0;
+            $cuentas = $this->authenticate_data->cuentas;
+            for ($i=0; $i < count($cuentas); $i++) { 
+                $usuarios = $cuentas[$i]->usuarios ;
+                for ($j=0; $j < count($usuarios); $j++) { 
+                    $atts[$count_user++] = $usuarios[$i]->id;
+                }
             }
-        ';
-        $curl = curl_init();
+        }
+        $r_agentes = [];
+        for ($i=0; $i < count($atts); $i++) { 
+            $json_body = '
+                {
+                    "tipo":"listarAgentesPorEmpresaAuth",
+                    "token":"' . $this->authenticate_data->token . '",
+                    "idempresa":"' . $atts[$i] . '"
+                }
+            ';
+            $curl = curl_init();
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->get_API_URL_AGENTE(),
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_POSTFIELDS => $json_body,
-            CURLOPT_HTTPHEADER => array(
-                "Content-Type: application/json"
-            ),
-        ));
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $this->API_URL_AGENTE,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_POSTFIELDS => $json_body,
+                CURLOPT_HTTPHEADER => array(
+                    "Content-Type: application/json"
+                ),
+            ));
 
-        $response = curl_exec($curl);
-        $this->agente_data = json_decode($response);
-        curl_close($curl);
-        return $response;
+            $response = curl_exec($curl);
+            $aux_agente = json_decode($response);
+            if($aux_agente->status="ok"){
+                $r_agentes = array_merge($r_agentes,$aux_agente->agentes);
+            }
+            curl_close($curl);
+        }
+        if($set){
+            $this->agente_data = $r_agentes;
+        }else{
+            return $r_agentes;
+        }
     }
     public function get_API_URL_CITY()
     {
@@ -446,8 +382,87 @@ class AveonlineAPI extends AveonlineShippingPlugin
         $this->guia = json_decode($response);
         return json_decode($response);
     }
-    public function FunctionName(Type $var = null)
+    public function get_Accounts($css = '', $css2 = '')
     {
-        # code...
+        $tags = [];
+        $tags['Accounts_tag'] = array(
+            'title' => '',
+            'type' => 'text',
+            'css' => $css,
+            'default' => __( 'Accounts' ),
+        );
+        if(!isset($this->authenticate_data->cuentas)){
+            $tags['Accounts_info'] = array(
+                'title' => '',
+                'type' => 'text',
+                'css' => $css2,
+                'default' => __( 'Complete the api key configuration' ),
+            );
+            return $tags;
+        }
+        $cuentas = $this->authenticate_data->cuentas;
+        $this->user = [];
+        $count_user = 0;
+        for ($i=0; $i < count($cuentas); $i++) { 
+            $usuarios = $cuentas[$i]->usuarios ;
+            for ($j=0; $j < count($usuarios); $j++) { 
+                $this->user[$count_user++] = $usuarios[$i]->id;
+                $tags['Cuentas'.$usuarios[$i]->id] = array(
+                    'title' => $cuentas[$i]->servicio,
+					'description' => 'User ID:'.$usuarios[$i]->id,
+                    'type' => 'checkbox',
+                    'class' => 'accounts_',
+                );
+            }
+        }
+        return $tags;
+    }
+    public function get_Agents($css = '', $css2 = '')
+    {
+        $tags = [];
+        $tags['Agents_tag'] = array(
+            'title' => '',
+            'type' => 'text',
+            'css' => $css,
+            'default' => __( 'Agents' ),
+        );
+        if(!isset($this->authenticate_data->cuentas)){
+            $tags['Agents_info'] = array(
+                'title' => '',
+                'type' => 'text',
+                'css' => $css2,
+                'default' => __( 'Complete the api key configuration' ),
+            );
+            return $tags;
+        }
+        $sw = false;
+        $user_yes = [];
+        for ($i=0; $i < count($this->user) ; $i++) { 
+            if($this->atts['Cuentas'.$this->user[0]] == "yes"){
+                $sw = true;
+                array_push($user_yes,$this->user[0]);
+            }
+        }
+        if(!$sw){
+            $tags['Agents_info2'] = array(
+                'title' => '',
+                'type' => 'text',
+                'css' => $css2,
+                'default' => __( 'Select an Agents' ),
+            );
+        }else{
+            $this->get_agentes($user_yes);
+            $agentes = $this->agente_data;
+            for ($i=0; $i < count($agentes); $i++) { 
+                $this->agentes_id = $agentes[$i]->id;
+                $tags['Agents_'.$agentes[$i]->id] = array(
+                    'title' => $agentes[$i]->nombre,
+					'description' => 'Origen:'.$agentes[$i]->idciudad,
+                    'type' => 'checkbox',
+                    'class' => 'agents_',
+                );
+            }
+        }
+        return $tags;
     }
 }

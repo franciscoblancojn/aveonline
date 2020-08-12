@@ -23,12 +23,57 @@ function aveonline_shipping_method() {
             }
             //Fields for the settings page
             function init_form_fields() {
-                $this->form_fields = array(
+                $css = '
+                    font-size: 30px;
+                    border: 0;
+                    background: transparent;
+                    font-weight: 600;
+                    padding: 0;
+                    height: auto;
+                    line-height: 1;
+                    background: #23282d;
+                    color: #fff;
+                    border-radius: 0;
+                    box-shadow: -100vw 0 #23282d;
+                    pointer-events: none;
+                    width: 100vw;
+                ';
+                $css2 = '
+                    border: 0;
+                    background: transparent;
+                    pointer-events: none;
+                ';
+                $Aveonline_API = new AveonlineAPI($this->settings);
+                $accounts = $Aveonline_API->get_Accounts($css,$css2);
+                $agents = $Aveonline_API->get_Agents($css,$css2);
+                $form_fields = array(
+                    'tag_1' => array(
+                        'title' => '',
+                        'type' => 'text',
+                        'css' => $css,
+                        'default' => __( 'Settings' ),
+                    ),
                     'enabled' => array(
                         'title' => __( 'Enabled' ),
                         'type' => 'checkbox',
                         'desc_tip' => __( 'Enabled/Disabled' ),
                         'default' => 'yes',
+                    ),
+                    'declared_value' => array(
+                        'title' => __( 'Declared value' ),
+                        'type' => 'number',
+                        'desc_tip' => __( 'Percentage of Declared Value' ),
+                        'default' => '100',
+                        'custom_attributes' => array(
+                            'min' => '0',
+                            'max' => '100',
+                        ),
+                    ),
+                    'tag_2' => array(
+                        'title' => '',
+                        'type' => 'text',
+                        'css' => $css,
+                        'default' => __( 'API KEY' ),
                     ),
                     'user' => array(
                         'title' => __( 'User' ),
@@ -36,11 +81,32 @@ function aveonline_shipping_method() {
                         'desc_tip' => __( 'Registered user in Aveonline' ),
                         'default' => '',
                     ),
+                    'password' => array(
+                        'title' => __( 'Password' ),
+                        'type' => 'password',
+                        'desc_tip' => __( 'Password in API Aveonline' ),
+                        'default' => '',
+                    ),
+                    // 'agent_id' => array(
+                    //     'title' => __( 'Agent ID' ),
+                    //     'type' => 'text',
+                    //     'desc_tip' => __( 'Agent ID in API Aveonline' ),
+                    //     'default' => '',
+                    // ),
+                    // 'nit' => array(
+                    //     'title' => __( 'Nit' ),
+                    //     'type' => 'text',
+                    //     'desc_tip' => __( 'Nit of the client registered in Aveonline' ),
+                    //     'default' => '',
+                    // ),
                 );
+                $form_fields = array_merge($form_fields,$accounts,$agents);
+                $this->form_fields = $form_fields;
                 var_dump($this->settings);
             }
 
             public function calculate_shipping( $package = array()) {
+                //if($this-)
                 $this->add_rate( array(
                     'id'      => "Prueba",
                     'label'   => "Prueba",
