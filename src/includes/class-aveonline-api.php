@@ -338,7 +338,7 @@ class AveonlineAPI
                             $cotizaciones = $aux_rate->cotizaciones;
                             for ($m=0; $m < count($cotizaciones); $m++) { 
                                 $rates[] = array(
-                                    'id'      => $cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
+                                    'id'      => $i.$j.$k.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
                                     'label'   => $cotizaciones[$m]->nombreTransportadora."[".$data["destinos"][$k]."]",
                                     'cost'    => $cotizaciones[$m]->totalguia,
                                 );

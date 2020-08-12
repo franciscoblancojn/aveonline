@@ -102,9 +102,6 @@ function aveonline_shipping_method() {
                 );
                 $form_fields = array_merge($form_fields,$accounts,$agents);
                 $this->form_fields = $form_fields;
-                //var_dump($this->settings);
-                var_dump($Aveonline_API->user_yes);
-                var_dump($Aveonline_API->agentes_yes);
             }
 
             public function calculate_shipping( $package = array()) {
@@ -137,7 +134,15 @@ function aveonline_shipping_method() {
                     "total" => $package['cart_subtotal'],
                 );
                 $rates = $Aveonline_API->get_rate($data);
-
+                // ob_start();
+                // var_dump($rates);
+                // $result = ob_get_clean();
+                // $this->add_rate(  array(
+                //     'id'      => 'ss',
+                //     'label'   => $result,
+                //     'cost'    => 99999999,
+                // ));
+                // return;
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
                 }
