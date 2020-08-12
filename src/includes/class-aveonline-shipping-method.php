@@ -7,49 +7,40 @@ function aveonline_shipping_method() {
                 $this->id                 = 'wc_aveonline_shipping';
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
-                //add to shipping zones list
-                $this->supports = array(
-                'shipping-zones',
-                'instance-settings',
-                'instance-settings-modal',
-                );
-
+                
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = 'yes';
-
-                $this->init();  
+                
+                $this->init();     
             }
 
             function init() {
                 // Load the settings API
-                $this->init_form_fields();
                 $this->init_settings();
-
+                $this->init_form_fields();
                 // Save settings in admin if you have any defined
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             //Fields for the settings page
             function init_form_fields() {
                 $this->form_fields = array(
-                    'usuario' => array(
-                        'title' => __( 'Usuario' ),
-                        'type' => 'text',
-                        'desc_tip' => __( 'Usuario registrado en Aveonline' ),
-                        'default' => (isset($this->settings['title']))?$this->settings['title']:""
+                    'enabled' => array(
+                        'title' => __( 'Enabled' ),
+                        'type' => 'checkbox',
+                        'desc_tip' => __( 'Enabled/Disabled' ),
+                        'default' => 'yes',
                     ),
-                    'cost' => array(
-                        'title' => __( 'Cost (lv)', 'teame' ),
-                        'type' => 'number',
-                        'description' => __( 'Cost of shipping', 'teame' ),
-                        'default' => 4
+                    'user' => array(
+                        'title' => __( 'User' ),
+                        'type' => 'text',
+                        'desc_tip' => __( 'Registered user in Aveonline' ),
+                        'default' => '',
                     ),
                 );
+                var_dump($this->settings);
             }
 
             public function calculate_shipping( $package = array()) {
-                //as we are using instances for the cost and the title we need to take those values drom the instance_settings
-                $intance_settings =  $this->instance_settings;
-                // Register the rate
                 $this->add_rate( array(
                     'id'      => "Prueba",
                     'label'   => "Prueba",
