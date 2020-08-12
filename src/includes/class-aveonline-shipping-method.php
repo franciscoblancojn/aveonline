@@ -9,7 +9,7 @@ function aveonline_shipping_method() {
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
                 $this->title = __( 'Aveonline Shipping' );
-                $this->enabled = 'yes';
+                $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
                 
                 $this->init();     
             }
@@ -102,17 +102,45 @@ function aveonline_shipping_method() {
                 );
                 $form_fields = array_merge($form_fields,$accounts,$agents);
                 $this->form_fields = $form_fields;
-                var_dump($this->settings);
+                //var_dump($this->settings);
+                var_dump($Aveonline_API->user_yes);
+                var_dump($Aveonline_API->agentes_yes);
             }
 
             public function calculate_shipping( $package = array()) {
-                //if($this-)
-                $this->add_rate( array(
-                    'id'      => "Prueba",
-                    'label'   => "Prueba",
-                    'cost'    => "10",
-                    )
+                if($this->settings['enabled'] == 'no'){
+                    return;
+                }
+                $Aveonline_API = new AveonlineAPI($this->settings);
+                $Aveonline_API->get_Accounts();
+                $Aveonline_API->get_Agents();
+
+                $idempresas = $Aveonline_API->user_yes;
+                $origenes   = $Aveonline_API->agentes_yes;
+                $destinos   = $Aveonline_API->get_city($package["destination"]);
+                 
+                $weight = 0;
+                foreach ($package["contents"] as $clave => $valor) {
+                    $_product = wc_get_product($valor["product_id"]);
+                    $weight += $_product->get_weight();
+                }
+                $data = array(
+                    'idempresas' => $idempresas,
+                    'origenes' => $origenes,
+                    'destinos' => $destinos,
+                    
+                    
+                    "quantity" => count($package["contents"]),
+                    "weight" => $weight,
+
+                    'valor_declarado' => $this->settings['declared_value'],
+                    "total" => $package['cart_subtotal'],
                 );
+                $rates = $Aveonline_API->get_rate($data);
+
+                for ($i=0; $i < count($rates); $i++) { 
+                    $this->add_rate( $rates[$i]);
+                }
             }
         }
     }

@@ -28,15 +28,16 @@ Copyright 2020 Startsco, Inc.
 
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-api.php';
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-shipping-method.php';
+require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-contraentrega.php';
+
 // // initialize plugin
-// function init_aveonline()
-// {
-// 	require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-contraentrega.php';
-// 	require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-change-order.php';
-// 	//custom css and js
-// 	wp_enqueue_style('WCAveonlineShippingMethod', plugin_dir_url( __FILE__ )."src/css/contraentrega.css",array(),null );
-// 	wp_enqueue_script('WC_contraentrega', plugin_dir_url( __FILE__ )."src/js/contraentrega.js",array(),null,true );
-// }
-// add_action('woocommerce_init', 'init_aveonline');
+function init_aveonline()
+{
+	//require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-change-order.php';
+	//custom css and js
+	wp_enqueue_style('WCAveonlineShippingMethod', plugin_dir_url( __FILE__ )."src/css/contraentrega.css",array(),null );
+	wp_enqueue_script('WC_contraentrega', plugin_dir_url( __FILE__ )."src/js/contraentrega.js",array(),null,true );
+}
+add_action('init', 'init_aveonline');
 
 	

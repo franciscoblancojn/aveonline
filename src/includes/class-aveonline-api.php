@@ -41,7 +41,42 @@ class AveonlineAPI
             $this->authenticate();
         }
     }
+    public function get_token($atts = array())
+    {
+        $json_body = '
+            {
+                "tipo":"auth",
+                "usuario":"' . (isset($atts['user'])?$atts['user']:$this->atts['user']) . '",
+                "clave":"' . (isset($atts['password'])?$atts['password']:$this->atts['password']) . '"
+            }
+        ';
+        $curl = curl_init();
 
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $this->API_URL_AUTHENTICATE,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $json_body,
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json"
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        $r = json_decode($response);
+        if($r->status == 'ok'){
+            return json_decode($response)->token;
+        }else{
+            return null;
+        }
+    }
     public function authenticate($atts = array(), $set = true)
     {
         $json_body = '
@@ -136,26 +171,92 @@ class AveonlineAPI
             return $r_agentes;
         }
     }
-    public function get_API_URL_CITY()
+    /**
+     * Remove some sepcial charecters from strings just like accents and umlauts
+     *
+     * @param sting $str
+     * @return string
+     */
+    function clean_string($str)
     {
-        return $this->API_URL_CITY;
+        $forbidden_chars = array("á", "é", "í", "ó", "ú", "Á", "É", "Í", "Ó", "Ú", "ñ", "ü");
+        $allowed_chars = array("a", "e", "i", "o", "u", "A", "E", "I", "O", "U", "n", "u");
+        $out = str_replace($forbidden_chars, $allowed_chars, $str);
+        return $out;
     }
-    public function get_city()
+
+    
+    /**
+     * Returns a state's full name from ISO state code
+     *
+     * @param string $code  ISO state code
+     * @return string
+     */
+    private static function get_regions_conversion($code)
     {
-        if ($this->city_api === null) {
-            return null;
+        $regions = array(
+            'AMZ' => 'amazonas',
+            'ANT' => 'antioquia',
+            'ARU' => 'arauca',
+            'ATL' => 'atlantico',
+            'BOL' => 'bolivar',
+            'BOY' => 'boyaca',
+            'CAL' => 'caldas',
+            'CAQ' => 'caqueta',
+            'CAS' => 'casanare',
+            'CAU' => 'cauca',
+            'CES' => 'cesar',
+            'CHOC' => 'choco',
+            'COR' => 'cordoba',
+            'CUN' => 'cundinamarca',
+            'GUA' => 'guainia',
+            'GUV' => 'guaviare',
+            'HUI' => 'huila',
+            'GUJ' => 'la Guajira',
+            'MAG' => 'magdalena',
+            'MET' => 'meta',
+            'NAR' => 'nariño',
+            'NOR' => 'norte de Santander',
+            'PUT' => 'putumayo',
+            'QUI' => 'quindio',
+            'RIS' => 'risaralda',
+            'SAP' => 'san Andres',
+            'SAN' => 'santander',
+            'SUC' => 'sucre',
+            'TOL' => 'tolima',
+            'VAC' => 'valle del Cauca',
+            'VAU' => 'vaupes',
+            'VIC' => 'vichada',
+        );
+
+        $code = strtoupper($code);
+
+        if (isset($regions[$code])) {
+            $region = $regions[$code];
+        } elseif (in_array(strtolower($code), array_values($regions))) {
+            $region = $code;
         }
+
+        return $region;
+    }
+    public function get_city($data = null)
+    {
+        if($data == null){
+            return [];
+        }
+        $destinos = [];
+
         $json_body = '
             {
                 "tipo": "listar",
-                "data": "' . $this->city_api . '",
+                "data": "' . $this->clean_string($data['city']) . '",
                 "registros": "999"
             }
         ';
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->get_API_URL_CITY(),
+            CURLOPT_URL => $this->API_URL_CITY,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -172,70 +273,26 @@ class AveonlineAPI
         $response = curl_exec($curl);
 
         curl_close($curl);
+        
+        $aux_r = json_decode($response);
+        if($aux_r->status="ok"){
+            for ($i=0; $i < count($aux_r->ciudades); $i++) { 
+                array_push($destinos,$aux_r->ciudades[$i]->nombre);
+            }
+        }
 
-        $this->city_data = json_decode($response);
-
-        return json_decode($response);
-    }
-    public function get_API_URL_QUOTE()
-    {
-        return $this->API_URL_QUOTE;
+        return $destinos;
     }
     public function quote($data = null)
     {
         if ($data === null) {
             return "Invalid";
         }
-        //validar usuario
-        if ($this->authenticate_data === null) {
-            return "Invalid";
-        }
-        if ($this->authenticate_data->status !== "ok") {
-            return "Invalid";
-        }
-        //validar agentes
-        if ($this->agente_data === null) {
-            return "Invalid";
-        }
-        if ($this->agente_data->status !== "ok") {
-            return "Invalid";
-        }
-        //validar city
-        if ($this->city_data === null) {
-            return "Invalid";
-        }
-        if ($this->city_data->status !== "ok") {
-            return "Invalid";
-        }
-        //validar parametros
-        if ($data["quantity"] === null) {
-            return "Invalid";
-        }
-        //"destino":"'.$this->city_data->ciudades[0]->nombre.'",
-        //"destino":"BOGOTA(CUNDINAMARCA)",
-        // "origen":"' . $data["origen"] . '",
-        // "destino":"' . $data["destino"] . '",
-        // "origen":"MEDELLIN(ANTIOQUIA)",
-        // "destino":"BOGOTA(CUNDINAMARCA)",
-        $json_body = '
-            {
-                "tipo":"cotizar",
-                "token":"' . $this->authenticate_data->token . '",
-                "idempresa":"' . $this->authenticate_data->cuentas[0]->usuarios[0]->id . '",
-                
-                "origen":"' . $data["origen"] . '",
-                "destino":"' . $data["destino"] . '",
-                "unidades":"' . $data["quantity"] . '",
-                "kilos":"' . $data["weight"] . '",
-                "valordeclarado":"' . $data["total"] * $this->p_valordeclarado . '",
-                "contraentrega":"' . $data["contraentrega"] . '",
-                "valorrecaudo":"' . $data["total"] . '"
-            }
-        ';
+        $json_body = $data;
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->get_API_URL_QUOTE(),
+            CURLOPT_URL => $this->API_URL_QUOTE,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -250,100 +307,48 @@ class AveonlineAPI
         ));
 
         $response = curl_exec($curl);
-        $this->quote_data = json_decode($response);
         curl_close($curl);
-        return $response;
+        return json_decode($response);
     }
     public function get_rate($data = null)
     {
         if ($data === null) {
-            return array();
+            return [];
         }
         $rates = [];
-        $rates[0] = array(
-            'id'        => "s2",
-            'label'     => "wa",
-            'cost'      => 9999999,
-            'calc_tax'  => 'per_item',
-        );
-        return $rates;
-        
-        // ob_start();
-        // var_dump($this->agente_data->agentes);
-        // var_dump($this->city_data->ciudades);
-        // $_agentes =  ob_get_clean();
-        // $rates = [];
-        // $rates[0] = array(
-        //     'label' => "c".$_agentes,
-        //     'cost' => '999999990',
-        //     'calc_tax' => 'per_item',
-        //     'nombreTransportadora' => "s"
-        // );
-        // return $rates;
-        $_agentes = $this->agente_data->agentes;
-        $_ciudades = $this->city_data->ciudades;
-        $rates = [];
-        $id_rate = 0;
-        $data["origen"] = null;
-        $data["destino"] = null;
-        $data["contraentrega"] = 0;
-        $rates[0] = array(
-            'id'        => "s",
-            'label'     => "w",
-            'cost'      => 9999999,
-            'calc_tax'  => 'per_item',
-        );
-        return $rates;
-        for ($i = 0 ; $i < count($_agentes) ; $i++) {
-            $data["origen"] = $_agentes[$i]->idciudad;
-            $rates[0] = array(
-                'id'        => "Pre_c",
-                'label'     => "Pre_c",
-                'cost'      => 9999999,
-                'calc_tax'  => 'per_item',
-            );
-            for ($j = 0 ; $j < count($_ciudades) ; $j++) {
-                $data["destino"] = $_ciudades->nombre;
-                $rates[1] = array(
-                    'id'        => "Pos_c",
-                    'label'     => "Pos_c",
-                    'cost'      => 9999999,
-                    'calc_tax'  => 'per_item',
-                );
-                return $rates;
-                for ($i = 0; $i < 2; $i++) {
-                    $data["contraentrega"] = $i;
-                    if($data["weight"] <= 0){
-                        $data["weight"] = 1;
+        for ($i = 0 ; $i < count($data['idempresas']) ; $i++) {
+            for ($j = 0 ; $j < count($data['origenes']) ; $j++) {
+                for ($k=0; $k < count($data['destinos']); $k++) { 
+                    for ($l=0; $l < 2; $l++) { 
+                        $aux_rate = $this->quote('
+                            {
+                                "tipo":"cotizar",
+                                "token":"' . $this->get_token() . '",
+                                "idempresa":"' .$data['idempresas'][$i]. '",
+                                "origen":"' . $data["origenes"][$j] . '",
+                                "destino":"' . $data["destinos"][$k] . '",
+                                "unidades":"' . $data["quantity"] . '",
+                                "kilos":"' . $data["weight"] . '",
+                                "valordeclarado":"' . $data["total"] * $data['valor_declarado'] . '",
+                                "contraentrega":"' . $l . '",
+                                "valorrecaudo":"' . $data["total"] . '"
+                            }
+                        ');
+                        if($aux_rate->status == 'ok'){
+                            $cotizaciones = $aux_rate->cotizaciones;
+                            for ($m=0; $m < count($cotizaciones); $m++) { 
+                                $rates[] = array(
+                                    'id'      => $cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
+                                    'label'   => $cotizaciones[$m]->nombreTransportadora."[".$data["destinos"][$k]."]",
+                                    'cost'    => $cotizaciones[$m]->totalguia,
+                                );
+                            }
+                        }
                     }
-                    $data["weight"] = 1;
-                    //$quote_data_ = json_decode($this->quote($data));
-                    $quote_data_ = $this->quote($data);
-                    $rates[$id_rate++] = array(
-                        'id'        => "s=".$id_rate,
-                        'label'     => "Prueba",
-                        'cost'      => 9999999,
-                        'calc_tax'  => 'per_item',
-                    );
-                    // foreach ($quote_data_->cotizaciones as $clave => $e) {
-                    //     $rates[$id_rate++] = array(
-                    //         'id'        => $id_rate.$e->codTransportadora . "WC_contraentrega_" . (($i == 0) ? "off" : "on"),
-                    //         'label'     => $e->nombreTransportadora . "-" . $data["origen"] . "->" . $data["destino"],
-                    //         'cost'      => $e->total,
-                    //         'calc_tax'  => 'per_item',
-                    //         'logo'      => $e->logoTransportadora,
-                    //         'nombreTransportadora' => $e->nombreTransportadora
-                    //     );
-                    // }
                 }
             }
         }
         return $rates;
-        return array(
-            'label' => "none",
-            'cost' => '0',
-            'calc_tax' => 'per_item'
-        );
     }
     public function get_guia($data = null)
     {
@@ -438,11 +443,12 @@ class AveonlineAPI
         $sw = false;
         $user_yes = [];
         for ($i=0; $i < count($this->user) ; $i++) { 
-            if($this->atts['Cuentas'.$this->user[0]] == "yes"){
+            if(isset($this->atts['Cuentas'.$this->user[$i]]) && $this->atts['Cuentas'.$this->user[$i]] == "yes"){
                 $sw = true;
-                array_push($user_yes,$this->user[0]);
+                array_push($user_yes,$this->user[$i]);
             }
         }
+        $this->user_yes = $user_yes;
         if(!$sw){
             $tags['Agents_info2'] = array(
                 'title' => '',
@@ -453,15 +459,19 @@ class AveonlineAPI
         }else{
             $this->get_agentes($user_yes);
             $agentes = $this->agente_data;
+            $agentes_yes = [];
             for ($i=0; $i < count($agentes); $i++) { 
-                $this->agentes_id = $agentes[$i]->id;
-                $tags['Agents_'.$agentes[$i]->id] = array(
+                $tags['Agents_'.$agentes[$i]->idciudad] = array(
                     'title' => $agentes[$i]->nombre,
 					'description' => 'Origen:'.$agentes[$i]->idciudad,
                     'type' => 'checkbox',
                     'class' => 'agents_',
                 );
+                if(isset($this->atts['Agents_'.$agentes[$i]->idciudad]) && $this->atts['Agents_'.$agentes[$i]->idciudad] == 'yes'){
+                    array_push($agentes_yes,$agentes[$i]->idciudad);
+                }
             }
+            $this->agentes_yes = $agentes_yes;
         }
         return $tags;
     }
