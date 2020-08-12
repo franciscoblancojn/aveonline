@@ -26,6 +26,12 @@ function init_WC_contraentrega() {
             
 	        add_action( 'wp_enqueue_scripts', array( $this, 'payment_scripts' ) );
         }
+        /**
+        * init_form_fields iniciando el Formulario de Configuracion del metodo de Pago
+        *
+        * @access public
+        * @return void
+        */
         public function init_form_fields()
         {
             $this->form_fields = array(

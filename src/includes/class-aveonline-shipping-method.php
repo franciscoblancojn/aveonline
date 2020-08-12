@@ -1,11 +1,4 @@
 <?php
-
-function add_tracking_notification()
-{
-    echo '<h5 style="margin-bottom:10px">This is a custom message</h5>';
-}
-
-//add_action('woocommerce_checkout_process', 'add_tracking_notification');
 class WCAveonlineShippingMethod extends WC_Shipping_Method
 {
     const SETTINGS_KEY = 'wc_aveonline_shipping_settings';
@@ -31,18 +24,12 @@ class WCAveonlineShippingMethod extends WC_Shipping_Method
         $this->_api_pwd = isset($settings["api_pass"]) ? $settings["api_pass"] : "";
         $this->_client_id = isset($settings["client_id"]) ? $settings["client_id"] : "";
 
-        // $this->availability = 'including';
-        // $this->countries = array(
-        //     'CO'
-        // );
-
         $this->supports = array(
             'settings',
             'shipping-zones',
             'instance-settings',
         );
 
-        //$this->init_form_fields();
         $this->init();
     }
     /**
@@ -64,20 +51,7 @@ class WCAveonlineShippingMethod extends WC_Shipping_Method
      */
     public function init_form_fields()
     {
-        $this->form_fields = array(
-            'aveonline_settings' => array(
-                'type' => 'aveonline_shipping_settings',
-            )
-        );
-    }
-
-    /**
-     * Load settings HTML for this shipping
-     * @return void 
-     */
-    public function generate_aveonline_shipping_settings_html()
-    {
-        include(WC_AVEONLINE_SHIPPING_DIR . 'src/templates/admin/settings.php');
+        //TODO: Pendiente hacer formulario
     }
 
     /**
@@ -340,216 +314,4 @@ class WCAveonlineShippingMethod extends WC_Shipping_Method
         if ($this->debug) logAveonline("################ END CALCULATE SHIPPING ################");
     }
 
-    public function generate_guide($orderId, $oldStatus, $newStatus, WC_Order $order)
-    {
-        require_once WC_AVEONLINE_SHIPPING_DIR . 'src/aveonline/class-aveonline-api.php';
-
-        if ($this->debug) logAveonline("################ START GENERATE GUIDE ################");
-
-        $existingGuide = get_post_meta($orderId, self::POSTMETA_GUIDE, true);
-
-        // TODO: improve validation according to free shipping and other conditions
-        if ($order->has_shipping_method($this->id) && (empty($existingGuide) || count($existingGuide) === 0) && 'processing' === $newStatus) {
-            // Get coordinadora settings
-            $aveonlineSettings = get_option(self::SETTINGS_KEY);
-
-            // Array que almacena la o las guias generadas
-            update_post_meta($orderId, self::POSTMETA_GUIDE, array());
-
-            // get an instance of the api caller
-            $api = new AveonlineAPI(
-                $aveonlineSettings["user"],
-                $aveonlineSettings["password"],
-                $aveonlineSettings["agent_id"]
-            );
-
-            // array with meta data (shipping settings)
-            $meta = array();
-            // origin data
-            $origin = array();
-            // destination data
-            $receiver = array();
-            // packages data
-            $packages = array();
-
-            $collectionTax = $aveonlineSettings["collection_tax"] ? $aveonlineSettings["collection_tax"] : 0; // 11 digits
-
-            // get shippings costs by vendor id
-            $shippingsArray = $order->get_items('shipping');
-            $shippings = [];
-            foreach ($shippingsArray as $key => $value) {
-                $courrierId = $value->get_meta('courrier_id');
-                $shippings[$courrierId]["total"] = $value->get_total();
-                $shippings[$courrierId]["taxes"] = $value->get_total_tax();
-            }
-            $meta["courrier"] = reset($order->get_items('shipping'))->get_meta('courrier_id');
-
-            // receiver info
-            if ($order->get_shipping_first_name()) {
-                $receiver['name'] = sprintf(
-                    "%s %s",
-                    $order->get_shipping_first_name(),
-                    $order->get_shipping_last_name()
-                );
-            } else {
-                $receiver['name'] = sprintf(
-                    '%s %s',
-                    $order->get_billing_first_name(),
-                    $order->get_billing_last_name()
-                );
-            }
-
-            if ($order->get_shipping_address_1()) {
-                $receiver['address'] = sprintf(
-                    "%s %s",
-                    $order->get_shipping_address_1(),
-                    $order->get_shipping_address_2()
-                );
-            } else {
-                $receiver['address'] = sprintf(
-                    "%s %s",
-                    $order->get_billing_address_1(),
-                    $order->get_billing_address_2()
-                );
-            }
-
-            $receiver["phone"]  = $order->get_billing_phone();
-            $receiver["nit"]    = get_post_meta($order->get_id(), "_billing_documento_de_identid")[0];
-            $receiver["email"]  = $order->get_billing_email();
-
-            // receiver location (destination)
-            $destRegion = $order->get_shipping_state() ? $order->get_shipping_state() : $order->get_billing_state();
-            $destCity   = $order->get_shipping_city() ? $order->get_shipping_city() : $order->get_billing_city();
-            $receiver["location"]   = $api->get_location_code($destRegion, $destCity);
-
-            // Get the dimetion unit set in Woocommerce
-            $dimensionUnit = get_option('woocommerce_dimension_unit');
-            // Calculate the rate to be applied for volume in m3
-            if ($dimensionUnit == 'mm') {
-                $dimensionRate = pow(10, 1);
-            } elseif ($dimensionUnit == 'cm') {
-                $dimensionRate = 1;
-            } elseif ($dimensionUnit == 'm') {
-                $dimensionRate = pow(10, -2);
-            }
-
-            // set payment method
-            $meta["cod"]            = $order->get_payment_method() == "cod" ? 1 : 0;
-            $meta["notify"]         = $aveonlineSettings["notify_customer"] ? $aveonlineSettings["notify_customer"] : 0; // default 1
-            $meta["chargeCustomer"] = $aveonlineSettings["charge_customer"] ? $aveonlineSettings["charge_customer"] : 0; // default 1
-
-            // get order items
-            $items = $order->get_items();
-            // TODO: optimizar uso de get_userdata para vendors
-            // TODO: optimizar queries de vendors si se tiene $vendors con la información
-            // iterate over each cart item
-            foreach ((array) $items as $key => $item) {
-                $product = $item->get_product();
-                $qty = intval($item->get_quantity()) > 1 ? intval($item->get_quantity()) : 1;
-
-                // get vendor data
-                $vendorId = get_post_field('post_author', $product->get_id());
-                // $vendor = get_userdata($vendorId);
-                // logAveonline("VENDOR ===============================");
-                // logAveonline($vendor);
-                // logAveonline("VENDOR ===============================");
-
-                if (!isset($packages[$vendorId])) $packages[$vendorId] = array();
-
-                // group packages by vendor
-                $packages[$vendorId][] = array(
-                    "height"    => $product->get_height() / $dimensionRate,
-                    "width"     => $product->get_width() / $dimensionRate,
-                    "length"    => $product->get_length() / $dimensionRate,
-                    "weight"    => wc_get_weight($product->get_weight(), 'kg'),
-                    "value"     => $product->get_price(),
-                    "id"        => $product->get_id(),
-                    "name"      => $item->get_name(),
-                    "quantity"  => $qty,
-                );
-            }
-
-            // iterate over each vendor to generates a shipping guide by vendor
-            foreach ((array) $packages as $vendorId => $vendorPackages) {
-                $vendor = get_userdata($vendorId);
-
-                $totalPrice = 0;
-                foreach ($vendorPackages as $package) {
-                    $totalPrice += $package["value"];
-                }
-
-                // origin location (source)
-                if ($vendor->roles[0] == "wcfm_vendor") {
-                    $regionVendor   = $api->clean_location_name(WC()->countries->get_base_state());
-                    $cityVendor    = $api->clean_location_name(WC()->countries->get_base_city());
-                    $vendorAddress = sprintf(
-                        "%s %s",
-                        WC()->countries->get_base_address(),
-                        WC()->countries->get_base_address_2()
-                    );
-                    $vendorName    = get_bloginfo('name');
-                } else {
-                    $regionVendor   = $api->clean_location_name(get_user_meta($vendorId, 'billing_state', true));
-                    $cityVendor    = $api->clean_location_name(get_user_meta($vendorId, 'billing_city', true));
-                    $vendorAddress = get_user_meta($vendorId, 'billing_address_1', true);
-                    $vendorName    = $vendor->display_name;
-                }
-
-                // set origin parameters
-                $origin["name"]     = $vendorName;
-                $origin["address"]  = $vendorAddress;
-                $origin["nit"]      = $aveonlineSettings["nit"];
-                $origin["email"]    = get_user_meta($vendorId, 'billing_email', true);
-                $origin["phone"]    = get_user_meta($vendorId, 'billing_phone', true);
-                $origin["location"] = $api->get_location_code($regionVendor, $cityVendor);
-
-
-                // set reference for shipping (order_id)
-                $meta["id"] = $order->get_id();
-                // set unique reference for shipping (vendor_id - order_id)
-                // $meta["id"] = $vendorId."-".$order->get_id();
-
-                // set value to collect 
-                // TODO: agregar el costo del envío
-                // TODO: revisar si hay algun otro caso de valueToCollect por ejemplo con charge_customer
-                $meta["vtc"] = $meta["cod"] ? ($totalPrice + $collectionTax) : 0;
-
-                if ($this->debug) {
-                    logAveonline("Origin:");
-                    logAveonline($origin);
-                    logAveonline("Destination:");
-                    logAveonline($receiver);
-                    logAveonline("Meta:");
-                    logAveonline($meta);
-                    logAveonline("Packages:");
-                    logAveonline($vendorPackages);
-                }
-
-                try {
-                    $guide = $api->generarguia($origin, $receiver, $meta, $vendorPackages);
-                    $existingGuides = get_post_meta($orderId, self::POSTMETA_GUIDE, true);
-                    $existingGuides[] = $guide["guia"]["numguia"];
-                    if ($this->debug) logAveonline($guide);
-                    EventHttpRequest::cancel();
-                    update_post_meta($orderId, self::POSTMETA_GUIDE, $existingGuides);
-                    if ($this->debug) logAveonline(get_post_meta($orderId, self::POSTMETA_GUIDE, true));
-                } catch (\Exception $e) {
-                    logAveonline("ERROR GENERATING GUIDE: {$e->getMessage()}");
-                    throw new Exception("Error generating guide");
-                }
-
-                if (empty($guide)) return;
-
-                // if (!$guide->codigo_remision) return;
-
-                // $guide_number = $guide->codigo_remision;
-
-                // $guide_url = sprintf( __( 'Código de seguimiento Coordinadora ('.$vendorName.')  <a target="_blank" href="%1$s">'.$guide_number.'</a>.' ), "http://sandbox.coordinadora.com/vmi/?guia=$guide_number" );
-
-                // update_post_meta($order->get_id(), self::POSTMETA_GUIDE, $guide_number);
-                // $order->add_order_note($guide_url);
-            }
-        }
-        if ($this->debug) logAveonline("################ END GENERATE GUIDE ################");
-    }
 }
