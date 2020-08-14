@@ -341,6 +341,16 @@ class AveonlineAPI
                                     'id'      => $i.$j.$k.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
                                     'label'   => $cotizaciones[$m]->nombreTransportadora."[".$data["destinos"][$k]."]",
                                     'cost'    => $cotizaciones[$m]->totalguia,
+                                    'meta_data' => array(
+                                        'idempresa'    => $data['idempresas'][$i],
+                                        'idagente'      => $data['agentes'][$j],
+                                        'Idtransportador'=> $cotizaciones[$m]->codTransportadora,
+                                        "unidades"      => $data["quantity"] ,
+                                        "kilos"         => $data["weight"] ,
+                                        "valordeclarado"=> $data["total"] * $data['valor_declarado'] ,
+                                        "token_1"       => base64_encode($this->atts['user']),
+                                        "token_2"       => base64_encode($this->atts['password']),
+                                    ),
                                 );
                             }
                         }
@@ -460,6 +470,7 @@ class AveonlineAPI
             $this->get_agentes($user_yes);
             $agentes = $this->agente_data;
             $agentes_yes = [];
+            $agentes_yes_id = [];
             for ($i=0; $i < count($agentes); $i++) { 
                 $tags['Agents_'.$agentes[$i]->idciudad] = array(
                     'title' => $agentes[$i]->nombre,
@@ -469,9 +480,11 @@ class AveonlineAPI
                 );
                 if(isset($this->atts['Agents_'.$agentes[$i]->idciudad]) && $this->atts['Agents_'.$agentes[$i]->idciudad] == 'yes'){
                     array_push($agentes_yes,$agentes[$i]->idciudad);
+                    array_push($agentes_yes_id,$agentes[$i]->id);
                 }
             }
             $this->agentes_yes = $agentes_yes;
+            $this->agentes_yes_id = $agentes_yes_id;
         }
         return $tags;
     }

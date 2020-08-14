@@ -114,6 +114,7 @@ function aveonline_shipping_method() {
 
                 $idempresas = $Aveonline_API->user_yes;
                 $origenes   = $Aveonline_API->agentes_yes;
+                $agentes    = $Aveonline_API->agentes_yes_id;
                 $destinos   = $Aveonline_API->get_city($package["destination"]);
                  
                 $weight = 0;
@@ -125,7 +126,7 @@ function aveonline_shipping_method() {
                     'idempresas' => $idempresas,
                     'origenes' => $origenes,
                     'destinos' => $destinos,
-                    
+                    'agentes' => $agentes,
                     
                     "quantity" => count($package["contents"]),
                     "weight" => $weight,
@@ -134,15 +135,6 @@ function aveonline_shipping_method() {
                     "total" => $package['cart_subtotal'],
                 );
                 $rates = $Aveonline_API->get_rate($data);
-                // ob_start();
-                // var_dump($rates);
-                // $result = ob_get_clean();
-                // $this->add_rate(  array(
-                //     'id'      => 'ss',
-                //     'label'   => $result,
-                //     'cost'    => 99999999,
-                // ));
-                // return;
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
                 }
