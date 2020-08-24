@@ -318,44 +318,41 @@ class AveonlineAPI
         $rates = [];
         for ($i = 0 ; $i < count($data['idempresas']) ; $i++) {
             for ($j = 0 ; $j < count($data['origenes']) ; $j++) {
-                for ($k=0; $k < count($data['destinos']); $k++) { 
-                    for ($l=0; $l < 2; $l++) { 
-                        $aux_rate = $this->quote('
-                            {
-                                "tipo":"cotizar",
-                                "token":"' . $this->get_token() . '",
-                                "idempresa":"' .$data['idempresas'][$i]. '",
-                                "origen":"' . $data["origenes"][$j] . '",
-                                "destino":"' . $data["destinos"][$k] . '",
-                                "unidades":"' . $data["quantity"] . '",
-                                "kilos":"' . $data["weight"] . '",
-                                "valordeclarado":"' . $data["total"] * $data['valor_declarado'] . '",
-                                "contraentrega":"' . $l . '",
-                                "valorrecaudo":"' . $data["total"] . '"
-                            }
-                        ');
-                        if($aux_rate->status == 'ok'){
-                            $cotizaciones = $aux_rate->cotizaciones;
-                            for ($m=0; $m < count($cotizaciones); $m++) { 
-                                $rates[] = array(
-                                    'id'      => $i.$j.$k.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
-                                    'label'   => $cotizaciones[$m]->nombreTransportadora."[".$data["destinos"][$k]."]",
-                                    'cost'    => $cotizaciones[$m]->totalguia,
-                                    'meta_data' => array(
-                                        'idempresa'    => $data['idempresas'][$i],
-                                        'idagente'      => $data['agentes'][$j],
-                                        'Idtransportador'=> $cotizaciones[$m]->codTransportadora,
-                                        "unidades"      => $data["quantity"] ,
-                                        "kilos"         => $data["weight"] ,
-                                        "valordeclarado"=> $data["total"] * $data['valor_declarado'] ,
-                                        "token_1"       => base64_encode($this->atts['user']),
-                                        "token_2"       => base64_encode($this->atts['password']),
-                                    ),
-                                );
-                            }
-                        }
+                $l = $data['contraentrega'];
+                $aux_rate = $this->quote('
+                    {
+                        "tipo":"cotizar",
+                        "token":"' . $this->get_token() . '",
+                        "idempresa":"' .$data['idempresas'][$i]. '",
+                        "origen":"' . $data["origenes"][$j] . '",
+                        "destino":"' . $data["destinos"] . '",
+                        "unidades":"' . $data["quantity"] . '",
+                        "kilos":"' . $data["weight"] . '",
+                        "valordeclarado":"' . $data["total"] . '",
+                        "contraentrega":"' . $l . '",
+                        "valorrecaudo":"' . $data["total"] . '"
                     }
-                }
+                ');
+                if($aux_rate->status == 'ok'){
+                    $cotizaciones = $aux_rate->cotizaciones;
+                    for ($m=0; $m < count($cotizaciones); $m++) { 
+                        $rates[] = array(
+                            'id'      => $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
+                            'label'   => (($l == 0) ? "" : "Contraentrega ").$cotizaciones[$m]->nombreTransportadora."[".$data["origenes"][$j]."]"."[".$data["destinos"]."]",
+                            'cost'    => $cotizaciones[$m]->totalguia,
+                            'meta_data' => array(
+                                'idempresa'    => $data['idempresas'][$i],
+                                'idagente'      => $data['agentes'][$j],
+                                'Idtransportador'=> $cotizaciones[$m]->codTransportadora,
+                                "unidades"      => $data["quantity"] ,
+                                "kilos"         => $data["weight"] ,
+                                "valordeclarado"=> $data["total"]  ,
+                                "token_1"       => base64_encode($this->atts['user']),
+                                "token_2"       => base64_encode($this->atts['password']),
+                            ),
+                        );
+                    }
+                } 
             }
         }
         return $rates;
@@ -472,7 +469,7 @@ class AveonlineAPI
             $agentes_yes = [];
             $agentes_yes_id = [];
             for ($i=0; $i < count($agentes); $i++) { 
-                $tags['Agents_'.$agentes[$i]->idciudad] = array(
+                $tags['Agents_'.$agentes[$i]->idciudad.'_()_'.$agentes[$i]->id] = array(
                     'title' => $agentes[$i]->nombre,
 					'description' => 'Origen:'.$agentes[$i]->idciudad,
                     'type' => 'checkbox',

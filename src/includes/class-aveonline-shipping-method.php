@@ -108,32 +108,66 @@ function aveonline_shipping_method() {
                 if($this->settings['enabled'] == 'no'){
                     return;
                 }
-                $Aveonline_API = new AveonlineAPI($this->settings);
-                $Aveonline_API->get_Accounts();
-                $Aveonline_API->get_Agents();
+                // ob_start();
+                // var_dump($this->settings);
+                // $result = ob_get_clean();
+                // $this->add_rate( array(
+                //     'id'=>'test',
+                //     'label'=>'s'.$result,
+                //     'cost'=>10
+                // ));
+                // return;
+                $_agentes= [];
+                $_origenes= [];
+                $_cuentas= [];
+                foreach ($this->settings as $key => $value) {
+                    if($value == "yes"){
+                        if(!(strpos($key, "Agents_") === false)){
+                            $e = explode("_()_",str_replace("Agents_","",$key));
+                            array_push($_origenes,$e[0]);
+                            array_push($_agentes,$e[1]);
+                        }
+                        if(!(strpos($key, "Cuentas") === false)){
+                            array_push($_cuentas,str_replace("Cuentas","",$key));
+                        }
+                    }
+                }
 
-                $idempresas = $Aveonline_API->user_yes;
-                $origenes   = $Aveonline_API->agentes_yes;
-                $agentes    = $Aveonline_API->agentes_yes_id;
-                $destinos   = $Aveonline_API->get_city($package["destination"]);
-                 
+                $idempresas     = $_cuentas;
+                $origenes       = $_origenes;
+                $agentes        = $_agentes;
+                $destinos       = $package["destination"]["city"];
+                $contraentrega  = WC()->session->get('contraentrega');
+                
                 $weight = 0;
                 foreach ($package["contents"] as $clave => $valor) {
                     $_product = wc_get_product($valor["product_id"]);
                     $weight += $_product->get_weight();
                 }
                 $data = array(
-                    'idempresas' => $idempresas,
-                    'origenes' => $origenes,
-                    'destinos' => $destinos,
-                    'agentes' => $agentes,
-                    
-                    "quantity" => count($package["contents"]),
-                    "weight" => $weight,
+                    'idempresas'        => $idempresas,
+                    'origenes'          => $origenes,
+                    'destinos'          => $destinos,
+                    'agentes'           => $agentes,
 
-                    'valor_declarado' => $this->settings['declared_value'],
-                    "total" => $package['cart_subtotal'],
+                    'contraentrega'     => $contraentrega,
+                    "quantity"          => count($package["contents"]),
+                    "weight"            => $weight,
+
+                    'valor_declarado'   => $this->settings['declared_value'],
+                    "total"             => $package['cart_subtotal'],
                 );
+                
+                // ob_start();
+                // var_dump($data);
+                // $result = ob_get_clean();
+                // $this->add_rate( array(
+                //     'id'=>'test',
+                //     'label'=>'s'.$result,
+                //     'cost'=>10
+                // ));
+                // return;
+                $Aveonline_API = new AveonlineAPI($this->settings);
                 $rates = $Aveonline_API->get_rate($data);
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
