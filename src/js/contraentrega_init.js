@@ -1,5 +1,5 @@
-function contraentrega_change(checked) {
-    checked = checked ? 1 : 0
+function contraentrega_change(_checked) {
+    checked = _checked ? 1 : 0
     jQuery.ajax({
         type: 'POST',
         url: wc_checkout_params.ajax_url,

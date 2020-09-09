@@ -8,7 +8,7 @@ function aveonline_shipping_method() {
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
-                $this->debug = true;
+                $this->debug = false;
 
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
@@ -119,11 +119,63 @@ function aveonline_shipping_method() {
                     "CODAZZI (CES)"                 =>"AGUSTIN CODAZZI(CESAR)",
                     "ALTO BAUDO (CHOC)"             =>"SAN MIGUEL DE BAUDO(CHOCO)",
                     "LA YE (COR)"                   =>"GUAYABAL LA YE(CORDOBA)",
-                    "PURISIMA (COR)"                =>"PURISIMA DE LA CONCEPCION(CORDOBA)",
-                    // ""=>"",
-                    // ""=>"",
-                    // ""=>"",
-                    //""=>"",
+                    "PURISIMA (COR)"                =>"PURISIMA DE LA CONCEPCION(CORDOBA)",  "LA VICTORIA (AMZ)" => "NO APLICA",
+                    "MIRITI PARANA (AMZ)"           => "NO APLICA",
+                    "SANTA ISABELL (ANT)"           => "NO APLICA",
+                    "GUICAN (BOY)"                  => "NO APLICA",
+                    "ARAGUANEY (CAS)"               => "NO APLICA",
+                    "VILLACAROLA (CAS)"             => "NO APLICA",
+                    "BELALCAZAR PAEZ (CAU)"         => "NO APLICA",
+                    "BAHIA SOLANO MUTIS (CHOC)"     => "NO APLICA",
+                    "BAJO BAUDO PIZARRO (CHOC)"     => "NO APLICA",
+                    "BUENA VISTA (COR)"             => "NO APLICA",
+                    "CARILLO (COR)"                 => "NO APLICA",
+                    "TIERRA ALTA (COR)"             => "NO APLICA",
+                    "CHUSACA (CUN)"                 => "NO APLICA",
+                    "EL CHARQUITO (CUN)"            => "NO APLICA",
+                    "EL COLEGIO MESITAS (CUN)"      => "NO APLICA",
+                    "PUERTO BOGOTA (CUN)"           => "ELIMINAR",
+                    "SAN ANT DE TEQUEN (CUN)"       => "NO APLICA",
+                    "SAN CAYETANO (CUN)"            => "NO APLICA",
+                    "SANTANDERSITO (CUN)"           => "NO APLICA",
+                    "PANA PANA (GUA)"               => "NO APLICA",
+                    "ARGENTINA (HUI)"               => "LA ARGENTINA(HUILA)",
+                    "SALADO BLANCO (HUI)"           => "NO APLICA",
+                    "VILLA VIEJA (HUI)"             => "NO APLICA",
+                    "HATO NUEVO (GUJ)"              => "NO APLICA",
+                    "CERRO SAN ANTONIO (MAG)"       => "NO APLICA",
+                    "GAIRA (MAG)"                   => "VALLE DE GAIRA(MAGDALENA)",
+                    "MEDIA LUNA (MAG)"              => "NO APLICA",
+                    "PIJIÑO DEL CARMEN (MAG)"       => "NO APLICA",
+                    "PRADO SEVILLA (MAG)"           => "NO APLICA",
+                    "PUEBLONUEVO (MAG)"             => "PUEBLO NUEVO(MAGDALENA)",
+                    "SABANAS DE SAN ANGEL (MAG)"    => "NO APLICA",
+                    "SAN SEBAST DE BUENAVI (MAG)"   => "NO APLICA",
+                    "CUBARRAL SAN LUIS (MET)"       => "NO APLICA",
+                    "BERRUECOS ARBOLEDA (NAR)"      => "NO APLICA",
+                    "CANDELILLAS (NAR)"             => "CANDELILLAS DE LA MAR(NARINO)",
+                    "CARLOSAMA CUASPUD (NAR)"       => "CARLOSAMA(NARINO)",
+                    "GUACHAVEZ SAN CRUZ (NAR)"      => "NO APLICA",
+                    "LA GUAYACANA (NAR)"            => "NO APLICA",
+                    "PIEDRAHANCHA (NAR)"            => "NO APLICA",
+                    "PILCUAN (NAR)"                 => "PILCUAN RECIA(NARINO)",
+                    "SAN JOSE DE ALBAN (NAR)"       => "NO APLICA",
+                    "LA DORADA SAN MIGUEL (PUT)"    => "NO APLICA",
+                    "LA HORMIGA - VALLE GUAMUEZ (PUT)" => "NO APLICA",
+                    "PROVIDENCIA (SAP)"             => "NO APLICA",
+                    "SAN ANDRES ISLA (SAP)"         => "NO APLICA",
+                    "SANTA CATALINA (SAP)"          => "NO APLICA",
+                    "SAN BENITO ABAD (SUC)"         => "NO APLICA",
+                    "HERBEO (TOL)"                  => "NO APLICA",
+                    "LA SIERRA (TOL)"               => "SAN FRANCISCO DE LA SIERRA(TOLIMA)",
+                    "MARIQUITA (TOL)"               => "MARIQUITA(TOLIMA)",
+                    "ANSERMA NUEVO (VAC)"           => "NO APLICA",
+                    "LA URIBE (VAC)"                => "URIBE URIBE(VALLE DEL CAUCA)",
+                    "LOBO GUERRERO (VAC)"           => "NO APLICA",
+                    "RIO FRIO (VAC)"                => "NO APLICA",
+                    "SALONICA LA MARINA (VAC)"      => "NO APLICA",
+                    "PAPANAUA (VAU)"                => "NO APLICA",
+                    "TIO BARBAS (VAU)"              => "NO APLICA",
                 );
                 $e = str_replace(array_keys($casos_especiales) , array_values($casos_especiales) , $e);
 
@@ -8702,12 +8754,15 @@ function aveonline_shipping_method() {
 
                 $this->pre($rates,"rates");
                 
-                return;
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
                     echo $rates[$i]['echo'];
-                    
                 }
+                $this->add_rate(array(
+                    'id'    =>  'contraentrega',
+                    'label' =>  "contraentrega".$contraentrega,
+                    "cost"  =>  "10",
+                ));
             }
         }
     }
