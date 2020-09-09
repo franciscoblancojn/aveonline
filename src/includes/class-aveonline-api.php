@@ -36,9 +36,19 @@ class AveonlineAPI
     {
         // api variables
         $this->atts = $atts;
-
+        $this->debug = true;
         if($load){
             $this->authenticate();
+        }
+    }
+    function pre( $e , $key = "none" ){
+        if($this->debug){
+            echo "<hr>";
+            echo $key;
+            echo "</hr>";
+            echo "<pre>";
+            var_dump($e);
+            echo "</pre>";
         }
     }
     public function get_token($atts = array())
@@ -288,7 +298,6 @@ class AveonlineAPI
         if ($data === null) {
             return "Invalid";
         }
-        $json_body = $data;
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -300,7 +309,7 @@ class AveonlineAPI
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => $json_body,
+            CURLOPT_POSTFIELDS => $data,
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/json"
             ),
@@ -319,7 +328,7 @@ class AveonlineAPI
         for ($i = 0 ; $i < count($data['idempresas']) ; $i++) {
             for ($j = 0 ; $j < count($data['origenes']) ; $j++) {
                 $l = $data['contraentrega'];
-                $aux_rate = $this->quote('
+                $json_body = '
                     {
                         "tipo":"cotizar",
                         "token":"' . $this->get_token() . '",
@@ -332,23 +341,43 @@ class AveonlineAPI
                         "contraentrega":"' . $l . '",
                         "valorrecaudo":"' . $data["total"] . '"
                     }
-                ');
+                ';
+                $this->pre($json_body);
+
+                $aux_rate = $this->quote($json_body);
+                $this->pre($aux_rate);
+
                 if($aux_rate->status == 'ok'){
                     $cotizaciones = $aux_rate->cotizaciones;
                     for ($m=0; $m < count($cotizaciones); $m++) { 
+                        $id = $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on");
+                        
                         $rates[] = array(
-                            'id'      => $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on"),
+                            'id'      => $id,
                             'label'   => (($l == 0) ? "" : "Contraentrega ").$cotizaciones[$m]->nombreTransportadora."[".$data["origenes"][$j]."]"."[".$data["destinos"]."]",
                             'cost'    => $cotizaciones[$m]->totalguia,
+                            'echo'    => '
+                                            <style>
+                                            [value="'.$id.'"] + label:before{
+                                                content: "";
+                                                background-image: url('.$cotizaciones[$m]->logoTransportadora.');
+                                                width:1em;
+                                                height:1em;
+                                                background-size:cover;
+                                                display: inline-block;
+                                                margin-right: 5px;
+                                            }
+                                            </style>
+                                        ',
                             'meta_data' => array(
-                                'idempresa'    => $data['idempresas'][$i],
-                                'idagente'      => $data['agentes'][$j],
-                                'Idtransportador'=> $cotizaciones[$m]->codTransportadora,
-                                "unidades"      => $data["quantity"] ,
-                                "kilos"         => $data["weight"] ,
-                                "valordeclarado"=> $data["total"]  ,
-                                "token_1"       => base64_encode($this->atts['user']),
-                                "token_2"       => base64_encode($this->atts['password']),
+                                'idempresa'         => $data['idempresas'][$i],
+                                'idagente'          => $data['agentes'][$j],
+                                'Idtransportador'   => $cotizaciones[$m]->codTransportadora,
+                                "unidades"          => $data["quantity"] ,
+                                "kilos"             => $data["weight"] ,
+                                "valordeclarado"    => $data["total"]  ,
+                                "token_1"           => base64_encode($this->atts['user']),
+                                "token_2"           => base64_encode($this->atts['password']),
                             ),
                         );
                     }

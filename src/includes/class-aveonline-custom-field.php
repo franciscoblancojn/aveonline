@@ -84,24 +84,46 @@ function destino_show_custom_field_checkout( $order ) {
 }
 */
 
+function all_city($e)
+{
+    return $e->nombre;
+}
 /**
  * Change the checkout city field to a dropdown field.
  */
 function ace_change_city_to_dropdown( $fields ) {
-
-	$cities = array(
-		'BETANIA(BOGOTA D.C.)',
-		'BOGOTA(CUNDINAMARCA)',
-		'BOSA(BOGOTA)',
-		'ENGATIVA(BOGOTA)',
-		'FONTIBON(BOGOTA)',
-		'LA UNION(BOGOTA D.C.)',
-		'PASQUILLA(BOGOTA D.C.)',
-		'PUERTO BOGOTA(CUNDNAMARCA)',
-		'SAN JUAN DE SUMAPAZ(BOGOTA D.C.)',
-		'SAN JUAN(BOGOTA D.C.)',
-		'USAQUEN(BOGOTA)',
-	);
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+    CURLOPT_URL => "https://aveonline.co/api/box/v1.0/ciudad.php",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => "",
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 0,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => "POST",
+    CURLOPT_POSTFIELDS =>"{\r\n    \"tipo\": \"listarTodos\"\r\n}",
+    CURLOPT_HTTPHEADER => array(
+        "Content-Type: application/json"
+    ),
+    ));
+    $response = curl_exec($curl);
+    curl_close($curl);
+    $response = json_decode($response);
+    
+    $cities = array_map('all_city',$response->ciudades);
+    
+		// 'BETANIA(BOGOTA D.C.)',
+		// 'BOGOTA(CUNDINAMARCA)',
+		// 'BOSA(BOGOTA)',
+		// 'ENGATIVA(BOGOTA)',
+		// 'FONTIBON(BOGOTA)',
+		// 'LA UNION(BOGOTA D.C.)',
+		// 'PASQUILLA(BOGOTA D.C.)',
+		// 'PUERTO BOGOTA(CUNDNAMARCA)',
+		// 'SAN JUAN DE SUMAPAZ(BOGOTA D.C.)',
+		// 'SAN JUAN(BOGOTA D.C.)',
+		// 'USAQUEN(BOGOTA)',
 
 	$city_args = wp_parse_args( array(
 		'type' => 'select',
@@ -116,4 +138,4 @@ function ace_change_city_to_dropdown( $fields ) {
 	return $fields;
 
 }
-add_filter( 'woocommerce_checkout_fields', 'ace_change_city_to_dropdown' );
+//add_filter( 'woocommerce_checkout_fields', 'ace_change_city_to_dropdown' );
