@@ -45,97 +45,16 @@ function show_custom_field_checkout( $order ) {
    if ( get_post_meta( $order_id, '_fecharecogida', true ) ) echo '<p><strong>Fecha de recogida:</strong> ' . get_post_meta( $order_id, '_fecharecogida', true ) . '</p>';
 }
 
- /*
-//destino
+
+//
 //add
-add_action( 'woocommerce_before_order_notes', 'destino_custom_field_checkout' );  
-function destino_custom_field_checkout( $checkout ) { 
-   $current_user = wp_get_current_user();
-   $destino = $current_user->destino;
-   woocommerce_form_field( 'destino', array(        
-      'type' => 'select',               
-      'label' => __('Destino'),     
-      'required' => true,        
-      'options' => array(
-        "Default" => "Select",
-        "s" => "s"
-      ),        
-   ), $checkout->get_value( 'destino' ) ); 
-}
-//valiadate
-add_action( 'woocommerce_checkout_process', 'destino_validate_custom_field_checkout' );
-function destino_validate_custom_field_checkout() {    
-    if ( ! $_POST['destino'] ) {
-        wc_add_notice( 'Por favor ingrese el destino despues de ingresar la ciudad', 'error' );
-    }else if ( $_POST['destino'] == "Default" ) {
-        wc_add_notice( 'Por favor ingrese el destino despues de ingresar la ciudad', 'error' );
-    }
-}
-//save
-add_action( 'woocommerce_checkout_update_order_meta', 'destino_save_custom_field_checkout' );
-function destino_save_custom_field_checkout( $order_id ) { 
-    if ( $_POST['destino'] ) update_post_meta( $order_id, '_destino', esc_attr( $_POST['destino'] ) );
-}
-//show
-add_action( 'woocommerce_admin_order_data_after_billing_address', 'destino_show_custom_field_checkout', 10, 1 );
-function destino_show_custom_field_checkout( $order ) {    
-   $order_id = $order->get_id();
-   if ( get_post_meta( $order_id, '_destino', true ) ) echo '<p><strong>Destino:</strong> ' . get_post_meta( $order_id, '_destino', true ) . '</p>';
-}
-*/
-
-function all_city($e)
-{
-    return $e->nombre;
-}
-/**
- * Change the checkout city field to a dropdown field.
- */
-function ace_change_city_to_dropdown( $fields ) {
-    $curl = curl_init();
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://aveonline.co/api/box/v1.0/ciudad.php",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 0,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "POST",
-    CURLOPT_POSTFIELDS =>"{\r\n    \"tipo\": \"listarTodos\"\r\n}",
-    CURLOPT_HTTPHEADER => array(
-        "Content-Type: application/json"
-    ),
-    ));
-    $response = curl_exec($curl);
-    curl_close($curl);
-    $response = json_decode($response);
-    
-    $cities = array_map('all_city',$response->ciudades);
-    
-		// 'BETANIA(BOGOTA D.C.)',
-		// 'BOGOTA(CUNDINAMARCA)',
-		// 'BOSA(BOGOTA)',
-		// 'ENGATIVA(BOGOTA)',
-		// 'FONTIBON(BOGOTA)',
-		// 'LA UNION(BOGOTA D.C.)',
-		// 'PASQUILLA(BOGOTA D.C.)',
-		// 'PUERTO BOGOTA(CUNDNAMARCA)',
-		// 'SAN JUAN DE SUMAPAZ(BOGOTA D.C.)',
-		// 'SAN JUAN(BOGOTA D.C.)',
-		// 'USAQUEN(BOGOTA)',
-
-	$city_args = wp_parse_args( array(
-		'type' => 'select',
-		'options' => array_combine( $cities, $cities ),
-	), $fields['shipping']['shipping_city'] );
-
-	$fields['shipping']['shipping_city'] = $city_args;
-	$fields['billing']['billing_city'] = $city_args;
-    
-    unset($fields['billing']['billing_state']);
-    //var_dump($fields['billing']['billing_city']);
-	return $fields;
-
-}
-//add_filter( 'woocommerce_checkout_fields', 'ace_change_city_to_dropdown' );
+// add_action( 'woocommerce_before_order_notes', 'contraentrega_checkbox' );  
+// function contraentrega_checkbox( $checkout ) { 
+//    $current_user = wp_get_current_user();
+//    $contraentrega_checkbox = $current_user->contraentrega_checkbox;
+//    woocommerce_form_field( 'contraentrega_checkbox', array(        
+//       'type' => 'checkbox',               
+//       'label' => __('contraentrega_checkbox'),     
+//       'default' => $contraentrega_checkbox,        
+//    ), $checkout->get_value( 'contraentrega_checkbox' ) ); 
+// }

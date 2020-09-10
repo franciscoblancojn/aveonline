@@ -8,7 +8,7 @@ function aveonline_shipping_method() {
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
-                $this->debug = false;
+                $this->debug = true;
 
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
@@ -8697,7 +8697,11 @@ function aveonline_shipping_method() {
                 if($this->settings['enabled'] == 'no'){
                     return;
                 }
-                
+                global $woocommerce;
+                $available_gateways = $woocommerce->payment_gateways->get_available_payment_gateways();
+                $this->pre($available_gateways);
+                return;
+
                 $destino_ = strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")");
                 
                 $destino_ = $this->get_code($destino_);
