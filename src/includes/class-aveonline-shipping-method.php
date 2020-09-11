@@ -8697,10 +8697,10 @@ function aveonline_shipping_method() {
                 if($this->settings['enabled'] == 'no'){
                     return;
                 }
-                global $woocommerce;
-                $available_gateways = $woocommerce->payment_gateways->get_available_payment_gateways();
-                $this->pre($available_gateways);
-                return;
+                // global $woocommerce;
+                // $available_gateways = $woocommerce->payment_gateways->get_available_payment_gateways();
+                // $this->pre($available_gateways);
+                // return;
 
                 $destino_ = strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")");
                 
@@ -8729,7 +8729,6 @@ function aveonline_shipping_method() {
                 $origenes       = $_origenes;
                 $agentes        = $_agentes;
                 $destinos       = $destino_;
-                $contraentrega  = WC()->session->get('contraentrega');
                 
                 $weight = 0;
                 foreach ($package["contents"] as $clave => $valor) {
@@ -8742,7 +8741,7 @@ function aveonline_shipping_method() {
                     'destinos'          => $destinos,
                     'agentes'           => $agentes,
 
-                    'contraentrega'     => $contraentrega,
+                    'contraentrega'     => 0,
                     "quantity"          => count($package["contents"]),
                     "weight"            => $weight,
 
@@ -8760,13 +8759,17 @@ function aveonline_shipping_method() {
                 
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
-                    echo $rates[$i]['echo'];
                 }
-                $this->add_rate(array(
-                    'id'    =>  'contraentrega',
-                    'label' =>  "contraentrega".$contraentrega,
-                    "cost"  =>  "10",
-                ));
+                $data['contraentrega'] = 1;
+                $this->pre($data,"data");
+
+                $rates = $Aveonline_API->get_rate($data);
+
+                $this->pre($rates,"rates");
+                
+                for ($i=0; $i < count($rates); $i++) { 
+                    $this->add_rate( $rates[$i]);
+                }
             }
         }
     }

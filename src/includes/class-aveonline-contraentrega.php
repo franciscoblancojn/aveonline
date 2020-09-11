@@ -91,45 +91,45 @@ function init_WC_contraentrega() {
         return $methods;
     }
     add_filter( 'woocommerce_payment_gateways', 'add_WC_contraentrega' );
-    function set_contraentrega() {
-        global $woocommerce;
-        if ( isset($_POST['contraentrega']) && $_POST['contraentrega'] == '1' ){
-            WC()->session->set('contraentrega', '1' );
-        } else {
-            WC()->session->set('contraentrega', '0' );
-        }
-        $woocommerce->cart->set_session();
-        WC()->cart->set_session();
-        WC()->cart->calculate_shipping();
-        echo json_encode( WC()->session->get('contraentrega' ) );
-        do_action( 'woocommerce_cart_updated' );
-        // Reset shipping first
-        WC()->shipping()->reset_shipping();
-        // var_dump(WC()->cart->get_shipping_packages());
-        die();
-    }
-    // Function that gets the Ajax data
-    add_action( 'wp_ajax_set_contraentrega', 'set_contraentrega' );
-    add_action( 'wp_ajax_nopriv_set_contraentrega', 'set_contraentrega' );
-    // return;
-    function refresh_shipping_methods( $post_data ){
-        // global $woocommerce;
-        // do_action( 'woocommerce_cart_updated' );
-        // $bool = true;
-        // if ( WC()->session->get('hide_shipping' ) == '1' ) $bool = false;
-        // WC()->session->set('contraentrega', '0' );
-        //Mandatory to make it work with shipping methods
-        // foreach ( WC()->cart->get_shipping_packages() as $package_key => $package ){
-        //     WC()->session->set( 'shipping_for_package_' . $package_key, WC()->session->get( 'shipping_for_package_' . $package_key) );
-        // }
+    // function set_contraentrega() {
+    //     global $woocommerce;
+    //     if ( isset($_POST['contraentrega']) && $_POST['contraentrega'] == '1' ){
+    //         WC()->session->set('contraentrega', '1' );
+    //     } else {
+    //         WC()->session->set('contraentrega', '0' );
+    //     }
+    //     // $woocommerce->cart->set_session();
+    //     // WC()->cart->set_session();
+    //     WC()->cart->calculate_shipping();
+    //     echo json_encode( WC()->session->get('contraentrega' ) );
+    //     // do_action( 'woocommerce_cart_updated' );
+    //     // // Reset shipping first
+    //     WC()->shipping()->reset_shipping();
+    //     // var_dump(WC()->cart->get_shipping_packages());
+    //     die();
+    // }
+    // // Function that gets the Ajax data
+    // add_action( 'wp_ajax_set_contraentrega', 'set_contraentrega' );
+    // add_action( 'wp_ajax_nopriv_set_contraentrega', 'set_contraentrega' );
+    // // return;
+    // function refresh_shipping_methods( $post_data ){
+    //     // global $woocommerce;
+    //     // do_action( 'woocommerce_cart_updated' );
+    //     // $bool = true;
+    //     // if ( WC()->session->get('hide_shipping' ) == '1' ) $bool = false;
+    //     // WC()->session->set('contraentrega', '0' );
+    //     //Mandatory to make it work with shipping methods
+    //     // foreach ( WC()->cart->get_shipping_packages() as $package_key => $package ){
+    //     //     WC()->session->set( 'shipping_for_package_' . $package_key, WC()->session->get( 'shipping_for_package_' . $package_key) );
+    //     // }
         
-        // if ( isset($_POST['contraentrega']) && $_POST['contraentrega'] == '1' ){
-        //     WC()->session->set('contraentrega', '1' );
-        // } else {
-        //     WC()->session->set('contraentrega', '0' );
-        // }
-        // WC()->cart->calculate_shipping();
-    }
-    add_action( 'woocommerce_checkout_update_order_review', 'refresh_shipping_methods', 10, 1 );
+    //     // if ( isset($_POST['contraentrega']) && $_POST['contraentrega'] == '1' ){
+    //     //     WC()->session->set('contraentrega', '1' );
+    //     // } else {
+    //     //     WC()->session->set('contraentrega', '0' );
+    //     // }
+    //     // WC()->cart->calculate_shipping();
+    // }
+    // add_action( 'woocommerce_checkout_update_order_review', 'refresh_shipping_methods', 10, 1 );
 }
 add_action( 'plugins_loaded', 'init_WC_contraentrega' );

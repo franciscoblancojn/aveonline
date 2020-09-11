@@ -1,20 +1,20 @@
 function contraentrega_change(_checked) {
-    checked = _checked ? 1 : 0
-    jQuery.ajax({
-        type: 'POST',
-        url: wc_checkout_params.ajax_url,
-        data: {
-            'action': 'set_contraentrega',
-            'contraentrega': checked,
-        },
-        success: function (response) {
-            console.log('ok', response)
-            jQuery(document.body).trigger("update_checkout")
-        },
-        error: function (error) {
-            console.log('error', error);
-        }
-    });
+    if(_checked){
+    	document.body.classList.add('wc_contraentrega_on')
+    }else{
+    	document.body.classList.remove('wc_contraentrega_on')
+    }
+    e = document.documentElement.querySelector('.shipping_method:checked')
+    
+    id = ""
+    if(!_checked){
+    	id = e.id.replace("wc_contraentrega_on","wc_contraentrega_off")
+    }else{
+    	id = e.id.replace("wc_contraentrega_off","wc_contraentrega_on")
+    }
+    console.log(id);
+    p = document.getElementById(id)
+    p.click()
 }
 function init_WC_contraentrega() {
     payment_method = document.getElementsByName('payment_method')

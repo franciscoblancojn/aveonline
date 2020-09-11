@@ -36,7 +36,7 @@ class AveonlineAPI
     {
         // api variables
         $this->atts = $atts;
-        $this->debug = true;
+        $this->debug = false;
         if($load){
             $this->authenticate();
         }
