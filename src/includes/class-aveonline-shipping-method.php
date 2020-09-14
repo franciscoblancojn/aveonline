@@ -8697,10 +8697,6 @@ function aveonline_shipping_method() {
                 if($this->settings['enabled'] == 'no'){
                     return;
                 }
-                // global $woocommerce;
-                // $available_gateways = $woocommerce->payment_gateways->get_available_payment_gateways();
-                // $this->pre($available_gateways);
-                // return;
 
                 $destino_ = strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")");
                 
@@ -8731,9 +8727,13 @@ function aveonline_shipping_method() {
                 $destinos       = $destino_;
                 
                 $weight = 0;
+                $valor_declarado = 0;
                 foreach ($package["contents"] as $clave => $valor) {
                     $_product = wc_get_product($valor["product_id"]);
                     $weight += $_product->get_weight();
+
+                    $_valor_declarado 	= get_post_meta($valor["product_id"],'_custom_valor_declarado' )[0];
+                    $valor_declarado	+= floatval($_valor_declarado) * floatval($valor["quantity"]);
                 }
                 $data = array(
                     'idempresas'        => $idempresas,
@@ -8745,14 +8745,16 @@ function aveonline_shipping_method() {
                     "quantity"          => count($package["contents"]),
                     "weight"            => $weight,
 
-                    'valor_declarado'   => $this->settings['declared_value'],
-                    "total"             => $package['cart_subtotal'],
+                    'valor_declarado'   => $valor_declarado,
+                    "valorrecaudo"      => $package['cart_subtotal'],
                 );
                 
                 
                 $this->pre($data,"data");
 
                 $Aveonline_API = new AveonlineAPI($this->settings, false);
+                $data['settings'] = $this->settings;
+
                 $rates = $Aveonline_API->get_rate($data);
 
                 $this->pre($rates,"rates");

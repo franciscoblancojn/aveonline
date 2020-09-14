@@ -337,9 +337,9 @@ class AveonlineAPI
                         "destino":"' . $data["destinos"] . '",
                         "unidades":"' . $data["quantity"] . '",
                         "kilos":"' . $data["weight"] . '",
-                        "valordeclarado":"' . $data["total"] . '",
+                        "valordeclarado":"' . $data["valor_declarado"] . '",
                         "contraentrega":"' . $l . '",
-                        "valorrecaudo":"' . $data["total"] . '"
+                        "valorrecaudo":"' . $data["valorrecaudo"] . '"
                     }
                 ';
                 $this->pre($json_body);
@@ -352,32 +352,17 @@ class AveonlineAPI
                     for ($m=0; $m < count($cotizaciones); $m++) { 
                         $id = $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on");
                         
+                        $json_meta = json_decode($json_body);
+                        $json_meta->idagente        = $data["agentes"][$j];
+                        $json_meta->idtransportador = $cotizaciones[$m]->codTransportadora;
+
                         $rates[] = array(
                             'id'      => $id,
                             'label'   => (($l == 0) ? "" : "Contraentrega ").$cotizaciones[$m]->nombreTransportadora."[".$data["origenes"][$j]."]"."[".$data["destinos"]."]",
                             'cost'    => $cotizaciones[$m]->totalguia,
-                            'echo'    => '
-                                            <style>
-                                            [value="'.$id.'"] + label:before{
-                                                content: "";
-                                                background-image: url('.$cotizaciones[$m]->logoTransportadora.');
-                                                width:1em;
-                                                height:1em;
-                                                background-size:cover;
-                                                display: inline-block;
-                                                margin-right: 5px;
-                                            }
-                                            </style>
-                                        ',
                             'meta_data' => array(
-                                'idempresa'         => $data['idempresas'][$i],
-                                'idagente'          => $data['agentes'][$j],
-                                'Idtransportador'   => $cotizaciones[$m]->codTransportadora,
-                                "unidades"          => $data["quantity"] ,
-                                "kilos"             => $data["weight"] ,
-                                "valordeclarado"    => $data["total"]  ,
-                                "token_1"           => base64_encode($this->atts['user']),
-                                "token_2"           => base64_encode($this->atts['password']),
+                                "data"      => base64_encode(json_encode($json_meta)),
+                                "settings"  => base64_encode(json_encode($data['settings'])),
                             ),
                         );
                     }

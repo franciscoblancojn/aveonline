@@ -45,16 +45,29 @@ function show_custom_field_checkout( $order ) {
    if ( get_post_meta( $order_id, '_fecharecogida', true ) ) echo '<p><strong>Fecha de recogida:</strong> ' . get_post_meta( $order_id, '_fecharecogida', true ) . '</p>';
 }
 
-
-//
-//add
-// add_action( 'woocommerce_before_order_notes', 'contraentrega_checkbox' );  
-// function contraentrega_checkbox( $checkout ) { 
-//    $current_user = wp_get_current_user();
-//    $contraentrega_checkbox = $current_user->contraentrega_checkbox;
-//    woocommerce_form_field( 'contraentrega_checkbox', array(        
-//       'type' => 'checkbox',               
-//       'label' => __('contraentrega_checkbox'),     
-//       'default' => $contraentrega_checkbox,        
-//    ), $checkout->get_value( 'contraentrega_checkbox' ) ); 
-// }
+// custom_valor_declarado_aveonline
+function woocommerce_custom_valor_declarado()
+{
+    global $woocommerce, $post;
+    echo '<div class="product_custom_field">';
+    woocommerce_wp_text_input(
+        array(
+            'id' => '_custom_valor_declarado',
+            'placeholder' => 'Custom Valor declarado',
+            'label' => __('Custom Valor declarado', 'woocommerce'),
+            'desc_tip' => 'true',
+            'type' => 'number',
+            'min' => '0'
+        )
+    );
+    echo '</div>';
+}
+add_action('woocommerce_product_options_general_product_data', 'woocommerce_custom_valor_declarado');
+// Save Fields
+function woocommerce_custom_valor_declarado_save($post_id)
+{
+    $woocommerce_custom_valor_declarado = $_POST['_custom_valor_declarado'];
+    if (!empty($woocommerce_custom_valor_declarado))
+        update_post_meta($post_id, '_custom_valor_declarado', esc_attr($woocommerce_custom_valor_declarado));
+}
+add_action('woocommerce_process_product_meta', 'woocommerce_custom_valor_declarado_save');
