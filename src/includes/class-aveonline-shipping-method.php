@@ -8,7 +8,7 @@ function aveonline_shipping_method() {
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
-                $this->debug = true;
+                $this->debug = false;
 
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
@@ -8741,12 +8741,15 @@ function aveonline_shipping_method() {
                     'destinos'          => $destinos,
                     'agentes'           => $agentes,
 
-                    'contraentrega'     => 0,
                     "quantity"          => count($package["contents"]),
                     "weight"            => $weight,
 
                     'valor_declarado'   => $valor_declarado,
-                    "valorrecaudo"      => $package['cart_subtotal'],
+
+                    'contraentrega'     => 0,
+                    "idasumecosto"      => 0,
+                    "valorrecaudo"      => 0,
+                    //"valorrecaudo"      => $package['cart_subtotal'],
                 );
                 
                 
@@ -8762,7 +8765,9 @@ function aveonline_shipping_method() {
                 for ($i=0; $i < count($rates); $i++) { 
                     $this->add_rate( $rates[$i]);
                 }
-                $data['contraentrega'] = 1;
+                $data['contraentrega']  = 1;
+                $data['idasumecosto']   = 1;
+                $data['valorrecaudo']   = $package['cart_subtotal'];
                 $this->pre($data,"data");
 
                 $rates = $Aveonline_API->get_rate($data);

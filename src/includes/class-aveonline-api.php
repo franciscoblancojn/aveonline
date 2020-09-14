@@ -36,7 +36,7 @@ class AveonlineAPI
     {
         // api variables
         $this->atts = $atts;
-        $this->debug = false;
+        $this->debug = true;
         if($load){
             $this->authenticate();
         }
@@ -339,7 +339,8 @@ class AveonlineAPI
                         "kilos":"' . $data["weight"] . '",
                         "valordeclarado":"' . $data["valor_declarado"] . '",
                         "contraentrega":"' . $l . '",
-                        "valorrecaudo":"' . $data["valorrecaudo"] . '"
+                        "valorrecaudo":"' . $data["valorrecaudo"] . '",
+                        "idasumecosto":"' . $data["idasumecosto"] . '"
                     }
                 ';
                 $this->pre($json_body);
@@ -350,21 +351,23 @@ class AveonlineAPI
                 if($aux_rate->status == 'ok'){
                     $cotizaciones = $aux_rate->cotizaciones;
                     for ($m=0; $m < count($cotizaciones); $m++) { 
-                        $id = $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on");
-                        
-                        $json_meta = json_decode($json_body);
-                        $json_meta->idagente        = $data["agentes"][$j];
-                        $json_meta->idtransportador = $cotizaciones[$m]->codTransportadora;
+                        if($cotizaciones[$m]->total!=0){
+                            $id = $i.$j.$cotizaciones[$m]->codTransportadora."WC_contraentrega_" . (($l == 0) ? "off" : "on");
+                            
+                            $json_meta = json_decode($json_body);
+                            $json_meta->idagente        = $data["agentes"][$j];
+                            $json_meta->idtransportador = $cotizaciones[$m]->codTransportadora;
 
-                        $rates[] = array(
-                            'id'      => $id,
-                            'label'   => (($l == 0) ? "" : "Contraentrega ").$cotizaciones[$m]->nombreTransportadora."[".$data["origenes"][$j]."]"."[".$data["destinos"]."]",
-                            'cost'    => $cotizaciones[$m]->totalguia,
-                            'meta_data' => array(
-                                "data"      => base64_encode(json_encode($json_meta)),
-                                "settings"  => base64_encode(json_encode($data['settings'])),
-                            ),
-                        );
+                            $rates[] = array(
+                                'id'      => $id,
+                                'label'   => (($l == 0) ? "" : "Contraentrega ").$cotizaciones[$m]->nombreTransportadora."[".$data["origenes"][$j]."]"."[".$data["destinos"]."]",
+                                'cost'    => $cotizaciones[$m]->total,
+                                'meta_data' => array(
+                                    "data"      => base64_encode(json_encode($json_meta)),
+                                    "settings"  => base64_encode(json_encode($data['settings'])),
+                                ),
+                            );
+                        }
                     }
                 } 
             }
