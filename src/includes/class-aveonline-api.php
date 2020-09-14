@@ -483,22 +483,17 @@ class AveonlineAPI
         }else{
             $this->get_agentes($user_yes);
             $agentes = $this->agente_data;
-            $agentes_yes = [];
-            $agentes_yes_id = [];
+            $ag = [];
             for ($i=0; $i < count($agentes); $i++) { 
-                $tags['Agents_'.$agentes[$i]->idciudad.'_()_'.$agentes[$i]->id] = array(
-                    'title' => $agentes[$i]->nombre,
-					'description' => 'Origen:'.$agentes[$i]->idciudad,
-                    'type' => 'checkbox',
-                    'class' => 'agents_',
-                );
-                if(isset($this->atts['Agents_'.$agentes[$i]->idciudad]) && $this->atts['Agents_'.$agentes[$i]->idciudad] == 'yes'){
-                    array_push($agentes_yes,$agentes[$i]->idciudad);
-                    array_push($agentes_yes_id,$agentes[$i]->id);
-                }
+                $ag[$agentes[$i]->idciudad.'_()_'.$agentes[$i]->id] = $agentes[$i]->nombre;
             }
-            $this->agentes_yes = $agentes_yes;
-            $this->agentes_yes_id = $agentes_yes_id;
+            
+            $tags['Agente_selected'] = array(
+                'title' => 'Select Angents',
+                'type' => 'select',
+                'class' => 'agents_',
+                'options' => $ag,
+            );
         }
         return $tags;
     }

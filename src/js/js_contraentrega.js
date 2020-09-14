@@ -8,13 +8,20 @@ function contraentrega_change(_checked) {
     
     id = ""
     if(!_checked){
-    	id = e.id.replace("wc_contraentrega_on","wc_contraentrega_off")
+        id = e.id.replace("wc_contraentrega_on","wc_contraentrega_off")
+        r = document.documentElement.querySelectorAll('[id*="wc_contraentrega_off"]')[0]
     }else{
-    	id = e.id.replace("wc_contraentrega_off","wc_contraentrega_on")
+        id = e.id.replace("wc_contraentrega_off","wc_contraentrega_on")
+        r = document.documentElement.querySelectorAll('[id*="wc_contraentrega_on"]')[0]
     }
-    console.log(id);
+    console.log(r);
     p = document.getElementById(id)
-    p.click()
+    if(p == null || p == undefined){
+        if(r != null & r != undefined)
+            r.click()
+    }else{
+        p.click()
+    }
 }
 function init_WC_contraentrega() {
     payment_method = document.getElementsByName('payment_method')

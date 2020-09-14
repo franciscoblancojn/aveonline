@@ -8,7 +8,7 @@ function aveonline_shipping_method() {
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
-                $this->debug = false;
+                $this->debug = true;
 
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
@@ -8710,16 +8710,16 @@ function aveonline_shipping_method() {
                 $_cuentas= [];
                 foreach ($this->settings as $key => $value) {
                     if($value == "yes"){
-                        if(!(strpos($key, "Agents_") === false)){
-                            $e = explode("_()_",str_replace("Agents_","",$key));
-                            array_push($_origenes,$e[0]);
-                            array_push($_agentes,$e[1]);
-                        }
                         if(!(strpos($key, "Cuentas") === false)){
                             array_push($_cuentas,str_replace("Cuentas","",$key));
                         }
                     }
                 }
+                $this->pre($this->settings['Agente_selected'],'Agente_selected');
+
+                $e = explode("_()_",$this->settings['Agente_selected']);
+                $_origenes[] = $e[0];
+                $_agentes[] = $e[1];
 
                 $idempresas     = $_cuentas;
                 $origenes       = $_origenes;
