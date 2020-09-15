@@ -32,7 +32,7 @@ function add_function_order_change($order_id) {
 add_action('woocommerce_order_status_completed',   'add_function_order_change');  
 function wp_aveonline() { 
      global $wpdb, $woocommerce, $current_user;
-     $order = new WC_Order(242);
+     $order = new WC_Order(250);
      $order_data = $order->get_data();
      $e = array();
      foreach ($order->get_items( 'shipping' ) as $item) {
@@ -53,40 +53,58 @@ function wp_aveonline() {
      );
      echo "<pre>";
      echo '
-     {
-          "tipo":"",
-          "token":"'.$api->get_token($atts).'",
           "idempresa":"'.$e['data']->idempresa.'",
-          "idagente":"'.$e['data']->idagente.'",
-          "idtransportador":"'.$e['data']->idtransportador.'",
+     {
+          "tipo":"generarGuia",
+          "codigo":"'.$e['settings']->user.'",
+          "dsclavex":"'.$e['settings']->password.'",
+
+          "origen":"'.$e['data']->origen.'",
+          "dsdirre":"",
+          "dsbarrioo":"",
+
           "destino":"'.$e['data']->destino.'",
-          "kilos":"'.$e['data']->kilos.'", 
-          "unidades":"'.$e['data']->unidades.'", 
-          "valordeclarado":"'.$e['data']->valordeclarado.'", 
-          "dscontenido":"", //¿Cual es contenido de tu envío?
-          "dsnit":"", //Nit seleccionado (COTIZACION)
+          "dsdir":"'.$order->get_address().'",
+          "dsbarrio":"",
+
+          "dsnitre":"",
+          "dstelre":"",
+          "dscelularre":"",
+          "dscorreopre":"",
+
+          "dsnit":"",
+          "dsnombre":"'.$order->get_shipping_first_name().'",
+          "dsnombrecompleto":"'.$order->get_formatted_billing_full_name().'",
+          "dscorreop":"'.$order->get_billing_email().'",
+          "dstel":"",
+          "dscelular":"'.$order->get_billing_phone().'",
+
+          "idtransportador":"'.$e['data']->idtransportador.'",
+
+          "idalto":"",
+          "idancho":"",
+          "idlargo":"",
+
+          "unidades":"'.$e['data']->unidades.'",
+          "kilos":"'.$e['data']->kilos.'",
+          "valordeclarado":"'.$e['data']->valordeclarado.'",
+          "dscontenido":"",
           "dscom":"'.$order_data['customer_note'].'",
-          "dsbarrioo":"", //Escribe tu barrio
-          "dsnitre":"", //Escribe el nit del destinatario
-          "dscorreopre":"", //Escribe el correo del destinatario
-          "dsnombrecompleto":"", //Nombre del destinatario
-          "dsdirre":"", //Escribe la direccion del destinatario
-          "dsbarrio":"", //Escribe el barrio del destinatario
-          "dstelre":"", //Escribe el telefono del destinatario
-          "dscelularre":"", //Escribe el telefono del destinatario
-          "valorrecaudo":"", //Escribe el valor del recaudo (En caso de el usuario realice el recaudo en caso que no 0)
-          "contraentrega":"", //Campo seleccionado (1[si] o 0[no]) (COTIZACION)
-          "cartaporte":"0", ////Desactivado en 0
-          "idalto":"", //¿Cuanto mide de alto el paquete en centimetros?
-          "idancho":"", //¿Cuanto mide de ancho el paquete en centimetros?
-          "idlargo":"", //Cuando mide de largo el paquete en centimetros?
-          "dsreferencia":"", //Dejar vacio
-          "dsordendecompra":"", //Dejar vacio
-          "bloquegenerarguia":1, //Activado en 1
-          "relacion_envios":1, //Activado en 1
-          "enviarcorreos":1, //Activado en 1
-          "idasumecosto":"" ¿El cliente asume el costo de transporte? (1[si] o0[no])
-         }
+
+          "idasumecosto":"'.$e['data']->idasumecosto.'",
+          "contraentrega":"'.$e['data']->contraentrega.'",
+          "valorrecaudo":"'.$e['data']->valorrecaudo.'",
+          
+          "idagente":"'.$e['data']->idagente.'",
+          "dsreferencia":"",
+          "dsordendecompra":"",
+          "bloquegenerarguia":"",
+          "relacion_envios":"",
+          "enviarcorreos":"",
+          "guiahija":"",
+          "accesoila":"",
+          "cartaporte":""
+     }
      ';
      echo "</pre>";
 } 
