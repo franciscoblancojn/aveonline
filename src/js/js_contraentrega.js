@@ -14,7 +14,6 @@ function contraentrega_change(_checked) {
         id = e.id.replace("wc_contraentrega_off","wc_contraentrega_on")
         r = document.documentElement.querySelectorAll('[id*="wc_contraentrega_on"]')[0]
     }
-    console.log(r);
     p = document.getElementById(id)
     if(p == null || p == undefined){
         if(r != null & r != undefined)
