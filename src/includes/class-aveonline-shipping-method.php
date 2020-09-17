@@ -8,7 +8,7 @@ function aveonline_shipping_method() {
                 $this->method_title       = __( 'Aveonline Shipping' );
                 $this->method_description = __( 'Servicios especializados en logística' );
                 
-                $this->debug = true;
+                $this->debug = false;
 
                 $this->title = __( 'Aveonline Shipping' );
                 $this->enabled = (isset($this->settings['enabled']))?$this->settings['enabled']:'yes';
@@ -25,6 +25,7 @@ function aveonline_shipping_method() {
             }
             //Fields for the settings page
             function init_form_fields() {
+                $this->pre($this->settings,'settings');
                 $css = '
                     font-size: 30px;
                     border: 0;
@@ -79,9 +80,209 @@ function aveonline_shipping_method() {
                         'desc_tip' => __( 'Password in API Aveonline' ),
                         'default' => '',
                     ),
+                    'tag_3' => array(
+                        'title' => '',
+                        'type' => 'text',
+                        'css' => $css,
+                        'default' => __( 'Remitente' ),
+                    ),
+                    'dsnitre' => array(
+                        'title' => __( 'NIT Remitente' ),
+                        'type' => 'text',
+                        'desc_tip' => __( 'NIT Remitente in Aveonline' ),
+                        'default' => '',
+                    ),
+                    'dstelre' => array(
+                        'title' => __( 'Teléfono remitente' ),
+                        'type' => 'tel',
+                        'desc_tip' => __( 'Teléfono remitente in Aveonline' ),
+                        'default' => '',
+                    ),
+                    'dscelularre' => array(
+                        'title' => __( 'Celular remitente' ),
+                        'type' => 'tel',
+                        'desc_tip' => __( 'Celular remitente in Aveonline' ),
+                        'default' => '',
+                    ),
+                    'dscorreopre' => array(
+                        'title' => __( 'Correo remitente' ),
+                        'type' => 'email',
+                        'desc_tip' => __( 'Correo remitente in Aveonline' ),
+                        'default' => '',
+                    ),
                 );
                 $form_fields = array_merge($form_fields,$accounts,$agents);
                 $this->form_fields = $form_fields;
+                $this->form_fields = array_merge( $this->form_fields, array(
+                    'tag_3_table_package' => array(
+                        'title' => '',
+                        'type' => 'text',
+                        'css' => $css,
+                        'default' => __( 'Packages' ),
+                    ),
+                )); 
+                $this->form_fields = array_merge( $this->form_fields, array(
+                    'table_package' => array(
+                        'id'    => 'table_package',
+                        'type'  => 'table_package',
+                        'title' => __( 'List package'),
+                        'desc_tip' => __( 'List package' ),
+                    )
+                )); 
+            }
+            public function generate_table_package_html( $key, $data ) { 
+                $field    = $this->plugin_id . $this->id . '_' . $key;
+                $defaults = array(
+                    'class'             => 'button-secondary',
+                    'css'               => '',
+                    'custom_attributes' => array(),
+                    'desc_tip'          => false,
+                    'description'       => '',
+                    'title'             => '',
+                );
+
+                $data = wp_parse_args( $data, $defaults );
+                ob_start();
+                ?>
+                <tr valign="top">
+                    <th scope="row" class="titledesc">
+                        <label for="<?php echo esc_attr( $field ); ?>">
+                            <?php echo wp_kses_post( $data['title'] ); ?>
+                        </label>
+                        <?php echo $this->get_tooltip_html( $data ); ?>
+                    </th>
+                    <td class="forminp">
+                        <fieldset>
+                            <legend class="screen-reader-text">
+                                <span>
+                                    <?php echo wp_kses_post( $data['title'] ); ?>
+                                </span>
+                            </legend>
+                            <button 
+                                class="<?php echo esc_attr( $data['class'] ); ?>" 
+                                type="button" name="<?php echo esc_attr( $field ); ?>" 
+                                id="table_package_btn" 
+                                style="<?php echo esc_attr( $data['css'] ); ?>" 
+                                <?php echo $this->get_custom_attribute_html( $data ); ?>>
+                                <?php echo __('Add package');?>
+                            </button>
+                            <?php echo $this->get_description_html( $data ); ?>
+                        </fieldset>
+                        <input 
+                        type="hidden"
+                        name="woocommerce_wc_aveonline_shipping_table_package" 
+                        id="woocommerce_wc_aveonline_shipping_table_package"
+                        value='<?=(isset($this->settings['table_package']))?$this->settings['table_package']:"[]";?>' 
+                        />
+                    </td>
+                </tr>
+                <tr id="table_package">
+                </tr>
+                <script>
+                    input = document.getElementById('woocommerce_wc_aveonline_shipping_table_package')
+                    btn = document.getElementById('table_package_btn')
+                    table = document.getElementById('table_package')
+                    n = 0
+                    var data 
+                    function add_tr(data = null){
+                        cR = `
+                            type="number"
+                            min="1"
+                            style="width: 30%;"
+                            required
+                        ` 
+                        e = document.createElement("tr");
+                        e.id=`package_${n}`
+                        e.style = `
+                            width: 100%;
+                            min-width: 700px;
+                            display: block;
+                        `
+                        e.innerHTML = `
+                            <td>
+                                <input 
+                                id="Length_${n}"    
+                                name="Length"
+                                placeholder="Length"
+                                ${cR}
+                                ${(data!=null)?'value="'+data.length+'"':""}
+                                />
+
+                                <input 
+                                id="Width_${n}"    
+                                name="Width"
+                                placeholder="Width"
+                                ${cR}
+                                ${(data!=null)?'value="'+data.width+'"':""}
+                                />
+
+                                <input 
+                                id="Height_${n}"    
+                                name="Height"
+                                placeholder="Height"
+                                ${cR}
+                                ${(data!=null)?'value="'+data.height+'"':""}
+                                />
+                                cm
+                            </td>
+                            <td>
+                                <button
+                                    id="delete_${n}"
+                                    id_delete="package_${n}"
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        `
+                        table.appendChild(e)
+                        d = document.getElementById(`delete_${n}`)
+                        d.onclick = function(event){
+                            event.preventDefault()
+                            id = this.getAttribute('id_delete')
+                            ele = document.getElementById(id)
+                            ele.outerHTML = ""
+                            sabe_table_package()
+                        }
+                        l = document.getElementById(`Length_${n}`)
+                        w = document.getElementById(`Width_${n}`)
+                        h = document.getElementById(`Height_${n}`)
+                        change_input(l)
+                        change_input(w)
+                        change_input(h)
+                        n++
+                    }
+                    function load_data(){
+                        data = JSON.parse(input.value)
+                        for (let i = 0; i < data.length; i++) {
+                            add_tr(data[i])
+                        }
+                    }
+                    load_data()
+                    function sabe_table_package(){
+                        data = []
+                        l = document.documentElement.querySelectorAll('[id*="Length_"]')
+                        w = document.documentElement.querySelectorAll('[id*="Width_"]')
+                        h = document.documentElement.querySelectorAll('[id*="Height_"]')
+                        for (let i = 0; i < l.length; i++) {
+                            data[i] = {
+                                length: l[i].value,
+                                width: w[i].value,
+                                height: h[i].value,
+                            }
+                        }
+                        input.value = JSON.stringify(data)
+                    }
+                    function change_input(e){
+                        e.onchange = function(){
+                            sabe_table_package()
+                        }
+                    }
+                    btn.onclick = function(){
+                        add_tr()
+                    }
+                </script>
+                <?php
+	            return ob_get_clean();
             }
             function pre( $e , $key = "none" ){
                 if($this->debug){

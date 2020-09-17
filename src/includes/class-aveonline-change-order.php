@@ -6,33 +6,14 @@
 * @return void
 */
 function add_function_order_change($order_id) {
-     global $wpdb, $woocommerce, $current_user;
-     $order = new WC_Order($order_id);
      
-     $curl = curl_init();
-     // de momento, esta peticion para probar 
-     curl_setopt_array($curl, array(
-     CURLOPT_URL => "http://46.101.124.148/prueba-test/",
-     CURLOPT_RETURNTRANSFER => true,
-     CURLOPT_ENCODING => "",
-     CURLOPT_MAXREDIRS => 10,
-     CURLOPT_TIMEOUT => 0,
-     CURLOPT_FOLLOWLOCATION => true,
-     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-     CURLOPT_CUSTOMREQUEST => "POST",
-     CURLOPT_POSTFIELDS => array('test' => $order->get_id()),
-     ));
-
-     $response = curl_exec($curl);
-
-     curl_close($curl);
-     echo $response;
 }
 
 add_action('woocommerce_order_status_completed',   'add_function_order_change');  
 function wp_aveonline() { 
      global $wpdb, $woocommerce, $current_user;
-     $order = new WC_Order(250);
+     $order_id = 272;
+     $order = new WC_Order($order_id);
      $order_data = $order->get_data();
      $e = array();
      foreach ($order->get_items( 'shipping' ) as $item) {
@@ -51,28 +32,45 @@ function wp_aveonline() {
           'user'         => $e['settings']->user,
           'password'     => $e['settings']->password,
      );
+     $product_name = "";
+     foreach ( $order->get_items() as $item_id => $item ) {
+          $product_id = $item->get_product_id();
+          $variation_id = $item->get_variation_id();
+          $product = $item->get_product();
+          $name = $item->get_name();
+          $quantity = $item->get_quantity();
+          $subtotal = $item->get_subtotal();
+          $total = $item->get_total();
+          $tax = $item->get_subtotal_tax();
+          $taxclass = $item->get_tax_class();
+          $taxstat = $item->get_tax_status();
+          $allmeta = $item->get_meta_data();
+          $somemeta = $item->get_meta( '_whatever', true );
+          $type = $item->get_type();
+
+          $product_name .= $name.", ";
+       }
      echo "<pre>";
      echo '
-          "idempresa":"'.$e['data']->idempresa.'",
      {
           "tipo":"generarGuia",
-          "codigo":"'.$e['settings']->user.'",
-          "dsclavex":"'.$e['settings']->password.'",
-
+          "token":"'.$api->get_token($atts).'",
+          "idempresa":"'.$e['data']->idempresa.'",
+          
           "origen":"'.$e['data']->origen.'",
           "dsdirre":"",
           "dsbarrioo":"",
-
+          
           "destino":"'.$e['data']->destino.'",
-          "dsdir":"'.$order->get_address().'",
+          "dsdir":"'.$order->get_billing_address_1().'",
           "dsbarrio":"",
 
-          "dsnitre":"",
-          "dstelre":"",
-          "dscelularre":"",
-          "dscorreopre":"",
-
-          "dsnit":"",
+          "dsnitre":"'.$e['settings']->dsnitre.'",
+          "dstelre":"'.$e['settings']->dstelre.'",
+          "dscelularre":"'.$e['settings']->dscelularre.'",
+          "dscorreopre":"'.$e['settings']->dscorreopre.'",
+          
+          "dsnit":"'. get_post_meta( $order_id, '_cedula', true ) .'",
           "dsnombre":"'.$order->get_shipping_first_name().'",
           "dsnombrecompleto":"'.$order->get_formatted_billing_full_name().'",
           "dscorreop":"'.$order->get_billing_email().'",
@@ -88,14 +86,16 @@ function wp_aveonline() {
           "unidades":"'.$e['data']->unidades.'",
           "kilos":"'.$e['data']->kilos.'",
           "valordeclarado":"'.$e['data']->valordeclarado.'",
-          "dscontenido":"",
+
+          "dscontenido":"Product Name: ['.$product_name.']",
           "dscom":"'.$order_data['customer_note'].'",
 
           "idasumecosto":"'.$e['data']->idasumecosto.'",
           "contraentrega":"'.$e['data']->contraentrega.'",
           "valorrecaudo":"'.$e['data']->valorrecaudo.'",
-          
+
           "idagente":"'.$e['data']->idagente.'",
+
           "dsreferencia":"",
           "dsordendecompra":"",
           "bloquegenerarguia":"",
