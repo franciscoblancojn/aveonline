@@ -6,13 +6,53 @@
 * @return void
 */
 function add_function_order_change($order_id) {
-     
+     update_guia_order($order_id , send_guia(generate_guia($order_id)));
 }
+add_action('woocommerce_order_status_processing',   'add_function_order_change' , 10, 1);  
 
-add_action('woocommerce_order_status_completed',   'add_function_order_change');  
-function wp_aveonline() { 
+function update_guia_order($order_id, $guia){
+	global $wpdb, $woocommerce, $current_user;
+     if($guia->status == "ok" && $guia->resultado->guia->codigo == 0){
+          $list_pdf = get_post_meta( $order_id, 'order_pdf', true );
+          if($list_pdf == null || $list_pdf == ""){
+               $list_pdf = array();
+          }
+          $e =  $guia->resultado->guia;
+          $new = array(
+               'guias'   => '<a target="_blank" href="'.$e->rutaguia.'" >'.$e->numguia.'</a>',
+               'rotulos' => '<a target="_blank" href="'.$e->rotulo.'" >'.$e->numguia.'</a>',
+          );
+          if(!in_array( $new , $list_pdf )){
+               $list_pdf[] = $new;
+               update_post_meta( $order_id, 'order_pdf', $list_pdf );
+          }
+     }
+}
+function send_guia($json_body){
+     $curl = curl_init();
+
+     curl_setopt_array($curl, array(
+     CURLOPT_URL => "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php",
+     CURLOPT_RETURNTRANSFER => true,
+     CURLOPT_ENCODING => "",
+     CURLOPT_MAXREDIRS => 10,
+     CURLOPT_TIMEOUT => 0,
+     CURLOPT_FOLLOWLOCATION => true,
+     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+     CURLOPT_CUSTOMREQUEST => "POST",
+     CURLOPT_POSTFIELDS => $json_body,
+     CURLOPT_HTTPHEADER => array(
+     "Content-Type: application/json"
+     ),
+     ));
+
+     $response = curl_exec($curl);
+
+     curl_close($curl);
+     return json_decode($response);
+}
+function generate_guia($order_id){
      global $wpdb, $woocommerce, $current_user;
-     $order_id = 272;
      $order = new WC_Order($order_id);
      $order_data = $order->get_data();
      $e = array();
@@ -23,11 +63,6 @@ function wp_aveonline() {
      }
      
      $api = new AveonlineAPI(array(),false);
-
-     echo "<pre>";
-     var_dump($e);
-     var_dump($order_data);
-     echo "</pre>";
      $atts = array(
           'user'         => $e['settings']->user,
           'password'     => $e['settings']->password,
@@ -50,8 +85,7 @@ function wp_aveonline() {
 
           $product_name .= $name.", ";
        }
-     echo "<pre>";
-     echo '
+     $json_body =  '
      {
           "tipo":"generarGuia",
           "token":"'.$api->get_token($atts).'",
@@ -74,14 +108,14 @@ function wp_aveonline() {
           "dsnombre":"'.$order->get_shipping_first_name().'",
           "dsnombrecompleto":"'.$order->get_formatted_billing_full_name().'",
           "dscorreop":"'.$order->get_billing_email().'",
-          "dstel":"",
+          "dstel":"'.$order->get_billing_phone().'",
           "dscelular":"'.$order->get_billing_phone().'",
 
           "idtransportador":"'.$e['data']->idtransportador.'",
 
-          "idalto":"",
-          "idancho":"",
-          "idlargo":"",
+          "idalto":"1",
+          "idancho":"1",
+          "idlargo":"1",
 
           "unidades":"'.$e['data']->unidades.'",
           "kilos":"'.$e['data']->kilos.'",
@@ -106,6 +140,41 @@ function wp_aveonline() {
           "cartaporte":""
      }
      ';
-     echo "</pre>";
+     return $json_body;
+}
+//show
+add_action( 'woocommerce_admin_order_data_after_billing_address', 'order_pdf', 10, 1 );
+function order_pdf( $order ) {    
+	$order_id = $order->get_id();
+	$e = get_post_meta( $order_id, 'order_pdf', true );
+	if ( $e ) {
+		if(count($e) > 0){
+			echo '
+			<hr>
+			<strong>
+				Pdf
+			</strong> 
+			<hr>
+			<strong>
+				Guias
+			</strong> 
+			<br>';
+			for ($i=0; $i < count($e); $i++) { 
+				echo $e[$i]['guias'].'<br>';
+			}
+			echo '<hr>
+			<strong>
+				Rotulos
+			</strong> 
+			<br>';
+			for ($i=0; $i < count($e); $i++) { 
+				echo $e[$i]['rotulos'].'<br>';
+			}
+			echo '<hr>';
+		}
+	}
+}
+function wp_aveonline() { 
+     add_function_order_change(307);
 } 
 add_shortcode('wp_aveonline', 'wp_aveonline'); 

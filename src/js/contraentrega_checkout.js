@@ -34,5 +34,6 @@ window.onload = function () {
         init_WC_contraentrega()
     });
     contraentrega_payment = document.getElementById('payment_method_WC_contraentrega')
-    contraentrega_change(contraentrega_payment.checked)
+    if(contraentrega_payment!=null && contraentrega_payment!=undefined)
+        contraentrega_change(contraentrega_payment.checked)
 }

@@ -37,6 +37,6 @@ function init_aveonline()
 {
 	//custom css and js
 	wp_enqueue_style('WC_contraentrega_css', plugin_dir_url( __FILE__ )."src/css/style_contraentrega.css",array(),null );
-	wp_enqueue_script('WC_contraentrega_js', plugin_dir_url( __FILE__ )."src/js/js_contraentrega.js",array(),null,true );
+	wp_enqueue_script('WC_contraentrega_js', plugin_dir_url( __FILE__ )."src/js/contraentrega_checkout.js",array(),null,true );
 }
 add_action('init', 'init_aveonline');
