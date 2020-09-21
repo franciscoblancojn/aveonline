@@ -6,11 +6,40 @@
 * @return void
 */
 function add_function_order_change($order_id) {
-     update_guia_order($order_id , send_guia(generate_guia($order_id)));
+     sistem_update_guia(update_guia_order($order_id , send_guia(generate_guia($order_id))));
 }
 add_action('woocommerce_order_status_processing',   'add_function_order_change' , 10, 1);  
 
-function update_guia_order($order_id, $guia){
+function sistem_update_guia($json_body = null){
+     if($json_body == null) return;
+     echo '<pre>';
+     var_dump($json_body);
+     echo '</pre>';
+
+     $curl = curl_init();
+
+     curl_setopt_array($curl, array(
+     CURLOPT_URL => "https://aveonline.co/api/nal/v1.0/plugins/wordpress.php",
+     CURLOPT_RETURNTRANSFER => true,
+     CURLOPT_ENCODING => "",
+     CURLOPT_MAXREDIRS => 10,
+     CURLOPT_TIMEOUT => 0,
+     CURLOPT_FOLLOWLOCATION => true,
+     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+     CURLOPT_CUSTOMREQUEST => "POST",
+     CURLOPT_POSTFIELDS =>$json_body,
+     CURLOPT_HTTPHEADER => array(
+     "Content-Type: application/json"
+     ),
+     ));
+
+     $response = curl_exec($curl);
+
+     curl_close($curl);
+     echo $response;
+
+}
+function update_guia_order($order_id , $guia){
 	global $wpdb, $woocommerce, $current_user;
      if($guia->status == "ok" && $guia->resultado->guia->codigo == 0){
           $list_pdf = get_post_meta( $order_id, 'order_pdf', true );
@@ -26,7 +55,25 @@ function update_guia_order($order_id, $guia){
                $list_pdf[] = $new;
                update_post_meta( $order_id, 'order_pdf', $list_pdf );
           }
+          
+          $order = new WC_Order($order_id);
+          $order_data = $order->get_data();
+          $od = array();
+          foreach ($order->get_items( 'shipping' ) as $item) {
+               foreach ($item->get_meta_data() as $data) {
+                    $od[$data->get_data()["key"]] = json_decode(base64_decode($data->get_data()["value"]));
+               }
+          }
+          $r = '{
+               "tipo" : "guardarPedidos",
+               "ruta":"'.plugin_dir_url( __FILE__ ).'class-aveonline-update-guia.php",
+               "guia":"'.$e->numguia.'",
+               "pedido":"'.$order_id.'",
+               "cliente_id" : "'.$od['data']->idempresa.'"
+          }';
+          return $r;
      }
+     return null;
 }
 function send_guia($json_body){
      $curl = curl_init();
@@ -49,6 +96,9 @@ function send_guia($json_body){
      $response = curl_exec($curl);
 
      curl_close($curl);
+     echo $json_body;
+     echo '<hr>';
+     echo $response;
      return json_decode($response);
 }
 function generate_guia($order_id){
@@ -67,6 +117,8 @@ function generate_guia($order_id){
           'user'         => $e['settings']->user,
           'password'     => $e['settings']->password,
      );
+     $table_package = json_decode($e['settings']->table_package);
+     $data_product = [];
      $product_name = "";
      foreach ( $order->get_items() as $item_id => $item ) {
           $product_id = $item->get_product_id();
@@ -83,8 +135,24 @@ function generate_guia($order_id){
           $somemeta = $item->get_meta( '_whatever', true );
           $type = $item->get_type();
 
+          $_product       = wc_get_product($product_id);
+          $data_product[] = array(
+               'id'      => $product_id,
+               "length"  => $_product->get_length(),
+               "width"   => $_product->get_width(),
+               "height"  => $_product->get_height(),
+               "quantity"=> $quantity,
+               "name"    => $name,
+          );
+
           $product_name .= $name.", ";
-       }
+     }
+     //$package_calcule =calculate_package($table_package , $data_product);
+     // echo '<pre>';
+     // echo "<hr>table_package<hr>";
+     // var_dump($package_calcule);
+     // echo '</pre>';
+
      $json_body =  '
      {
           "tipo":"generarGuia",
@@ -142,6 +210,47 @@ function generate_guia($order_id){
      ';
      return $json_body;
 }
+function calculate_package($table_package , $data_product){
+     // echo '<pre>';
+     // echo "<hr>table_package<hr>";
+     // var_dump($table_package);
+     // echo "<hr>data_product<hr>";
+     // var_dump($data_product);
+     // echo '</pre>';
+
+     for ($i=0; $i < count($table_package); $i++) { 
+          for ($j=0; $j < count($data_product); $j++) { 
+               if(  $table_package[$i]->length > $data_product[$j]["length"] &&
+                    $table_package[$i]->width > $data_product[$j]["width"] &&
+                    $table_package[$i]->height > $data_product[$j]["height"] &&
+                    $data_product[$j]['quantity'] > 0
+               ){
+                    $k_ = 1 ;
+                    for ($k=1; $k <= $data_product[$j]['quantity']; $k++) { 
+                         if(  $table_package[$i]->length > $data_product[$j]["length"] * $k &&
+                              $table_package[$i]->width > $data_product[$j]["width"] * $k &&
+                              $table_package[$i]->height > $data_product[$j]["height"] * $k 
+                         ){
+                              $k_ = $k;
+                         }
+                    }
+                    $aux_product = $data_product[$j];
+                    $aux_product['quantity'] = $k_;
+                    $table_package[$i]->products[] = $aux_product;
+                    $data_product[$j]['quantity'] -= $k_;
+
+               }
+          }
+     }
+
+     echo '<pre>';
+     echo "<hr>table_package<hr>";
+     var_dump($table_package);
+     echo "<hr>data_product<hr>";
+     var_dump($data_product);
+     echo '</pre>';
+     return $table_package;
+}
 //show
 add_action( 'woocommerce_admin_order_data_after_billing_address', 'order_pdf', 10, 1 );
 function order_pdf( $order ) {    
@@ -175,6 +284,6 @@ function order_pdf( $order ) {
 	}
 }
 function wp_aveonline() { 
-     add_function_order_change(307);
+     add_function_order_change(418);
 } 
 add_shortcode('wp_aveonline', 'wp_aveonline'); 
