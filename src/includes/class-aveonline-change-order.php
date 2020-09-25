@@ -108,7 +108,7 @@ function send_guia($json_body , $e , $order_data , $order_id){
           $data = '
           {
                "tipo":"generarRecogida",
-               "token":"'.$api->get_token($atts).'",
+               "token":"'.base64_encode(json_encode($atts)).'",
                "idempresa":"'.$e['data']->idempresa.'",
                "idagente":"'.$e['data']->idagente.'",
                "idtransportador":"'.$e['data']->idtransportador.'",
@@ -119,9 +119,7 @@ function send_guia($json_body , $e , $order_data , $order_id){
                "dscom":"'.$order_data['customer_note'].'"
           }
           ';
-          echo $data;
-          $r = $api->solicitar_recogida($data);
-          var_dump($r);
+          update_post_meta( $order_id, 'solicitar_recogida', base64_encode($data) );
      }
      return $response;
 }
