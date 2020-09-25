@@ -47,44 +47,45 @@ function aveonline_shipping_method() {
                     pointer-events: none;
                 ';
                 $Aveonline_API = new AveonlineAPI($this->settings);
-                $accounts = $Aveonline_API->get_Accounts($css,$css2);
-                $agents = $Aveonline_API->get_Agents($css,$css2);
+                $accounts = $Aveonline_API->get_Accounts();
+                $agents = $Aveonline_API->get_Agents();
                 $form_fields = array(
-                    'tag_1' => array(
-                        'title' => '',
-                        'type' => 'text',
-                        'css' => $css,
-                        'default' => __( 'Settings' ),
+                    'style' => array(
+                        'id'    => 'style',
+                        'type'  => 'style',
+                    ),
+                    'tag_Configuraciones' => array(
+                        'id'    => 'tag',
+                        'type'  => 'tag',
+                        'title' => __( 'Configuraciones'),
                     ),
                     'enabled' => array(
-                        'title' => __( 'Enabled' ),
+                        'title' => __( 'Habilitar/Deshabilitar' ),
                         'type' => 'checkbox',
-                        'desc_tip' => __( 'Enabled/Disabled' ),
+                        'desc_tip' => __( 'Habilitar/Deshabilitar' ),
                         'default' => 'yes',
                     ),
-                    'tag_2' => array(
-                        'title' => '',
-                        'type' => 'text',
-                        'css' => $css,
-                        'default' => __( 'API KEY' ),
+                    'tag_api' => array(
+                        'id'    => 'tag',
+                        'type'  => 'tag',
+                        'title' => __( 'API KEY'),
                     ),
                     'user' => array(
-                        'title' => __( 'User' ),
+                        'title' => __( 'Usuario' ),
                         'type' => 'text',
                         'desc_tip' => __( 'Registered user in Aveonline' ),
                         'default' => '',
                     ),
                     'password' => array(
-                        'title' => __( 'Password' ),
+                        'title' => __( 'Contraseña' ),
                         'type' => 'password',
                         'desc_tip' => __( 'Password in API Aveonline' ),
                         'default' => '',
                     ),
-                    'tag_3' => array(
-                        'title' => '',
-                        'type' => 'text',
-                        'css' => $css,
-                        'default' => __( 'Remitente' ),
+                    'tag_Remitente' => array(
+                        'id'    => 'tag',
+                        'type'  => 'tag',
+                        'title' => __( 'Remitente'),
                     ),
                     'dsnitre' => array(
                         'title' => __( 'NIT Remitente' ),
@@ -93,19 +94,19 @@ function aveonline_shipping_method() {
                         'default' => '',
                     ),
                     'dstelre' => array(
-                        'title' => __( 'Teléfono remitente' ),
+                        'title' => __( 'Teléfono Remitente' ),
                         'type' => 'tel',
                         'desc_tip' => __( 'Teléfono remitente in Aveonline' ),
                         'default' => '',
                     ),
                     'dscelularre' => array(
-                        'title' => __( 'Celular remitente' ),
+                        'title' => __( 'Celular Remitente' ),
                         'type' => 'tel',
                         'desc_tip' => __( 'Celular remitente in Aveonline' ),
                         'default' => '',
                     ),
                     'dscorreopre' => array(
-                        'title' => __( 'Correo remitente' ),
+                        'title' => __( 'Correo Remitente' ),
                         'type' => 'email',
                         'desc_tip' => __( 'Correo remitente in Aveonline' ),
                         'default' => '',
@@ -113,22 +114,95 @@ function aveonline_shipping_method() {
                 );
                 $form_fields = array_merge($form_fields,$accounts,$agents);
                 $this->form_fields = $form_fields;
-                $this->form_fields = array_merge( $this->form_fields, array(
-                    'tag_3_table_package' => array(
-                        'title' => '',
-                        'type' => 'text',
-                        'css' => $css,
-                        'default' => __( 'Packages' ),
-                    ),
-                )); 
-                $this->form_fields = array_merge( $this->form_fields, array(
-                    'table_package' => array(
-                        'id'    => 'table_package',
-                        'type'  => 'table_package',
-                        'title' => __( 'List package'),
-                        'desc_tip' => __( 'List package' ),
-                    )
-                )); 
+                // $this->form_fields = array_merge( $this->form_fields, array(
+                //     'tag_Paquetes' => array(
+                //         'id'    => 'tag',
+                //         'type'  => 'tag',
+                //         'title' => __( 'Paquetes'),
+                //     ),
+                // )); 
+                // $this->form_fields = array_merge( $this->form_fields, array(
+                //     'table_package' => array(
+                //         'id'    => 'table_package',
+                //         'type'  => 'table_package',
+                //         'title' => __( 'Lista de Paquetes'),
+                //         'desc_tip' => __( 'Lista de Paquetes' ),
+                //     )
+                // )); 
+            }
+
+            /**
+             * Custon field tag
+             */
+            public function generate_info_html( $key, $data ) { 
+                $field    = $this->plugin_id . $this->id . '_' . $key;
+                $defaults = array(
+                    'class'             => 'button-secondary',
+                    'css'               => '',
+                    'custom_attributes' => array(),
+                    'desc_tip'          => false,
+                    'description'       => '',
+                    'title'             => '',
+                );
+
+                $data = wp_parse_args( $data, $defaults );
+                ob_start();
+                ?>
+                <tr>
+                    <td>
+                        <?php echo wp_kses_post( $data['title'] ); ?>
+                    </td>
+                    <td></td>
+                </tr>
+                <?php
+                return ob_get_clean();
+            }
+            /**
+             * Custon field tag
+             */
+            public function generate_tag_html( $key, $data ) { 
+                $field    = $this->plugin_id . $this->id . '_' . $key;
+                $defaults = array(
+                    'class'             => 'button-secondary',
+                    'css'               => '',
+                    'custom_attributes' => array(),
+                    'desc_tip'          => false,
+                    'description'       => '',
+                    'title'             => '',
+                );
+
+                $data = wp_parse_args( $data, $defaults );
+                ob_start();
+                ?>
+                <tr class="tag_amazing">
+                    <td>
+                        <?php echo wp_kses_post( $data['title'] ); ?>
+                    </td>
+                    <td></td>
+                </tr>
+                <?php
+                return ob_get_clean();
+            }
+            /**
+             * Custon field style
+             */
+            public function generate_style_html( $key, $data ) { 
+                ?>
+                <style>
+                    .tag_amazing{
+                        background-color: #23282d;
+                        color: #fff;
+                        width: 100%;
+                        box-shadow: -50px 0 #23282d, 50px 0 #23282d;
+                    }
+                    .tag_amazing.tag_amazing *{
+                        font-size: 30px;
+                        font-weight: 700;
+                        color: #fff;
+                        padding: 5px 0;
+                    }
+                </style>
+                <?php
             }
             public function generate_table_package_html( $key, $data ) { 
                 $field    = $this->plugin_id . $this->id . '_' . $key;

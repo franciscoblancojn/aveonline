@@ -6,7 +6,7 @@
 * @return void
 */
 function add_function_order_change($order_id) {
-     sistem_update_guia(update_guia_order($order_id , send_guia(generate_guia($order_id))));
+     sistem_update_guia(update_guia_order($order_id , (generate_guia($order_id))));
 }
 add_action('woocommerce_order_status_processing',   'add_function_order_change' , 10, 1);  
 
@@ -68,14 +68,14 @@ function update_guia_order($order_id , $guia){
                "tipo" : "guardarPedidos",
                "ruta":"'.plugin_dir_url( __FILE__ ).'class-aveonline-update-guia.php",
                "guia":"'.$e->numguia.'",
-               "pedido":"'.$order_id.'",
+               "pedido_id":"'.$order_id.'",
                "cliente_id" : "'.$od['data']->idempresa.'"
           }';
           return $r;
      }
      return null;
 }
-function send_guia($json_body){
+function send_guia($json_body , $e , $order_data , $order_id){
      $curl = curl_init();
 
      curl_setopt_array($curl, array(
@@ -99,7 +99,31 @@ function send_guia($json_body){
      echo $json_body;
      echo '<hr>';
      echo $response;
-     return json_decode($response);
+     $response = json_decode($response);
+     if($response->status=="ok"){
+          $atts = array(
+               'user'         => $e['settings']->user,
+               'password'     => $e['settings']->password,
+          );
+          $data = '
+          {
+               "tipo":"generarRecogida",
+               "token":"'.$api->get_token($atts).'",
+               "idempresa":"'.$e['data']->idempresa.'",
+               "idagente":"'.$e['data']->idagente.'",
+               "idtransportador":"'.$e['data']->idtransportador.'",
+               "unidades":"'.$e['data']->unidades.'",
+               "kilos":"'.$e['data']->kilos.'",
+               "valordeclarado":"'.$e['data']->valordeclarado.'",
+               "fecharecogida":"'.$e['data']->fecharecogida.'",
+               "dscom":"'.$order_data['customer_note'].'"
+          }
+          ';
+          echo $data;
+          $r = $api->solicitar_recogida($data);
+          var_dump($r);
+     }
+     return $response;
 }
 function generate_guia($order_id){
      global $wpdb, $woocommerce, $current_user;
@@ -120,6 +144,7 @@ function generate_guia($order_id){
      $table_package = json_decode($e['settings']->table_package);
      $data_product = [];
      $product_name = "";
+     $volumen = 0;
      foreach ( $order->get_items() as $item_id => $item ) {
           $product_id = $item->get_product_id();
           $variation_id = $item->get_variation_id();
@@ -145,14 +170,19 @@ function generate_guia($order_id){
                "name"    => $name,
           );
 
+          $volumen += $_product->get_length() * $_product->get_width() * $_product->get_height() * $quantity;
+
           $product_name .= $name.", ";
      }
-     //$package_calcule =calculate_package($table_package , $data_product);
+     $idalto = pow($volumen, 1/3);
+     $idancho = pow($volumen, 1/3);
+     $idlargo = pow($volumen, 1/3);
+     // $package_calcule = calculate_package($table_package , $data_product);
      // echo '<pre>';
      // echo "<hr>table_package<hr>";
      // var_dump($package_calcule);
      // echo '</pre>';
-
+     // return;
      $json_body =  '
      {
           "tipo":"generarGuia",
@@ -181,9 +211,9 @@ function generate_guia($order_id){
 
           "idtransportador":"'.$e['data']->idtransportador.'",
 
-          "idalto":"1",
-          "idancho":"1",
-          "idlargo":"1",
+          "idalto":"'.$idalto.'",
+          "idancho":"'.$idancho.'",
+          "idlargo":"'.$idlargo.'",
 
           "unidades":"'.$e['data']->unidades.'",
           "kilos":"'.$e['data']->kilos.'",
@@ -208,7 +238,9 @@ function generate_guia($order_id){
           "cartaporte":""
      }
      ';
-     return $json_body;
+     
+     $e['data']->fecharecogida = get_post_meta( $order_id, '_fecharecogida', true );
+     return send_guia($json_body , $e , $order_data , $order_id);
 }
 function calculate_package($table_package , $data_product){
      // echo '<pre>';
@@ -217,28 +249,30 @@ function calculate_package($table_package , $data_product){
      // echo "<hr>data_product<hr>";
      // var_dump($data_product);
      // echo '</pre>';
-
      for ($i=0; $i < count($table_package); $i++) { 
+          $table_package[$i]->products = array();
           for ($j=0; $j < count($data_product); $j++) { 
                if(  $table_package[$i]->length > $data_product[$j]["length"] &&
                     $table_package[$i]->width > $data_product[$j]["width"] &&
                     $table_package[$i]->height > $data_product[$j]["height"] &&
                     $data_product[$j]['quantity'] > 0
                ){
-                    $k_ = 1 ;
-                    for ($k=1; $k <= $data_product[$j]['quantity']; $k++) { 
-                         if(  $table_package[$i]->length > $data_product[$j]["length"] * $k &&
-                              $table_package[$i]->width > $data_product[$j]["width"] * $k &&
-                              $table_package[$i]->height > $data_product[$j]["height"] * $k 
-                         ){
-                              $k_ = $k;
-                         }
-                    }
-                    $aux_product = $data_product[$j];
-                    $aux_product['quantity'] = $k_;
-                    $table_package[$i]->products[] = $aux_product;
-                    $data_product[$j]['quantity'] -= $k_;
-
+                    // $k_ = 1 ;
+                    // for ($k=1; $k <= $data_product[$j]['quantity']; $k++) { 
+                    //      if(  $table_package[$i]->length > $data_product[$j]["length"] * $k &&
+                    //           $table_package[$i]->width > $data_product[$j]["width"] * $k &&
+                    //           $table_package[$i]->height > $data_product[$j]["height"] * $k 
+                    //      ){
+                    //           $k_ = $k;
+                    //      }
+                    // }
+                    // $aux_product = $data_product[$j];
+                    // $aux_product['quantity'] = $k_;
+                    // $table_package[$i]->products[] = $aux_product;
+                    // $data_product[$j]['quantity'] -= $k_;
+                    array_push($table_package[$i]->products,  $data_product[$j]);
+                    //$table_package[$i]->products[] = $data_product[$j];
+                    $data_product[$j]['quantity'] = 0;
                }
           }
      }
@@ -285,5 +319,6 @@ function order_pdf( $order ) {
 }
 function wp_aveonline() { 
      add_function_order_change(418);
+     //generate_guia(418);
 } 
 add_shortcode('wp_aveonline', 'wp_aveonline'); 

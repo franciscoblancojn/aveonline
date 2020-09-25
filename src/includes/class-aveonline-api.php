@@ -411,21 +411,18 @@ class AveonlineAPI
         $this->guia = json_decode($response);
         return json_decode($response);
     }
-    public function get_Accounts($css = '', $css2 = '')
+    public function get_Accounts()
     {
         $tags = [];
-        $tags['Accounts_tag'] = array(
-            'title' => '',
-            'type' => 'text',
-            'css' => $css,
-            'default' => __( 'Accounts' ),
+        $tags['tag_Cuentas'] = array(
+            'id'    => 'tag',
+            'type'  => 'tag',
+            'title' => __( 'Cuentas'),
         );
         if(!isset($this->authenticate_data->cuentas)){
             $tags['Accounts_info'] = array(
-                'title' => '',
-                'type' => 'text',
-                'css' => $css2,
-                'default' => __( 'Complete the api key configuration' ),
+                'type' => 'info',
+                'title' => __( 'Completa la configuración de la clave api' ),
             );
             return $tags;
         }
@@ -450,18 +447,15 @@ class AveonlineAPI
     {
         $tags = [];
         $tags['Agents_tag'] = array(
-            'title' => '',
-            'type' => 'text',
-            'css' => $css,
-            'default' => __( 'Agents' ),
+            'id'    => 'tag',
+            'type'  => 'tag',
+            'title' => __( 'Agentes'),
         );
         if(!isset($this->authenticate_data->cuentas)){
             $tags['Agents_info'] = array(
-                'title' => '',
-                'type' => 'text',
-                'css' => $css2,
-                'default' => __( 'Complete the api key configuration' ),
-            );
+                'type' => 'info',
+                'title' => __( 'Completa la configuración de la clave api' ),
+            );;
             return $tags;
         }
         $sw = false;
@@ -475,10 +469,8 @@ class AveonlineAPI
         $this->user_yes = $user_yes;
         if(!$sw){
             $tags['Agents_info2'] = array(
-                'title' => '',
-                'type' => 'text',
-                'css' => $css2,
-                'default' => __( 'Select an Agents' ),
+                'type' => 'info',
+                'title' => __( 'Seleccione un Agente' ),
             );
         }else{
             $this->get_agentes($user_yes);
@@ -489,12 +481,36 @@ class AveonlineAPI
             }
             
             $tags['Agente_selected'] = array(
-                'title' => 'Select Angents',
+                'title' => 'Lista de Agentes',
                 'type' => 'select',
                 'class' => 'agents_',
                 'options' => $ag,
             );
         }
         return $tags;
+    }
+    public function solicitar_recogida($data = null)
+    {
+        if($data == null) return;
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json"
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        return json_decode($response);
     }
 }
