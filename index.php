@@ -31,6 +31,7 @@ require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-api.php
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-shipping-method.php';
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-contraentrega.php';
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-change-order.php';
+require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-aveonline-recogida.php';
 
 // initialize plugin
 function init_aveonline()
