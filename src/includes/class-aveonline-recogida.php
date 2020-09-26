@@ -20,11 +20,29 @@ function recogida_aveonline_option_page(){
 }
 
 function recogida_aveonline_page(){
-    $customer_orders = wc_get_orders( array(
-        'numberposts' => -1,
-        'return' => 'ids',
-        'status' => 'processing',
-    ) );
+    $rd_args_total = array(
+        'meta_key'      => 'solicitar_recogida',
+        'meta_compare'  => 'EXISTS',
+        'return'        => 'ids',
+        'status'        => 'processing',
+    );
+    $customer_orders_total = wc_get_orders( $rd_args_total );
+
+    $paged = (isset($_GET['paged']))?intval($_GET['paged']):1;
+    $n_page = 10;
+    $rd_args = array(
+        'meta_key'      => 'solicitar_recogida',
+        'meta_compare'  => 'EXISTS',
+        'return'        => 'ids',
+        'status'        => 'processing',
+
+        'nopaging'                  => false,
+        'paged'                     => '1',
+        'posts_per_page'            => $n_page,
+        'posts_per_archive_page'    => $n_page,
+        'offset'                    => $n_page *($paged - 1),
+    );
+    $customer_orders = wc_get_orders( $rd_args );
     ?>
     <h2 class="screen-reader-text">Orders</h2>
     <script>
@@ -33,10 +51,14 @@ function recogida_aveonline_page(){
                 alert('Error')
                 return
             }
+            if(result ==  "no change"){
+                console.log(order_id , result)
+                return
+            }
             order =  document.getElementById(`post-${order_id}`)
             order.outerHTML = result
         }
-        function generar_recogida(e){
+        async function generar_recogida(e){
             order_id = e.getAttribute('order_id')
             var myHeaders = new Headers();
             myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
@@ -52,20 +74,20 @@ function recogida_aveonline_page(){
                 redirect: 'follow'
             };
 
-            fetch("<?=plugin_dir_url( __FILE__ )?>class-aveonline-recogida.php", requestOptions)
+            await fetch("<?=plugin_dir_url( __FILE__ )?>class-aveonline-recogida.php", requestOptions)
             .then(response => response.text())
             .then(result => refes_order(order_id , result))
             .catch(error => console.log('error', error));
         }
-        function generar_multiple(){
+        async function generar_multiple(){
             select = document.documentElement.querySelectorAll("[id*='cb-select']:not([id='cb-select-all-1']):checked")
             for (let i = 0; i < select.length; i++) {
                 e = select[i];
-                generar_recogida(e)
+                await generar_recogida(e)
             }
+            document.getElementById('cb-select-all-1').click()
         }
     </script>
-
     <div class="wp-core-ui" >
         <p>
             <button 
@@ -100,6 +122,57 @@ function recogida_aveonline_page(){
             ?>
         </tbody>
     </table>
+    <div class="tablenav bottom">
+        <div class="alignleft actions">
+        </div>
+        <div class="tablenav-pages">
+            <span class="displaying-num"><?=count($customer_orders_total)?> items</span>
+            <span class="pagination-links">
+                <?php
+                    $url_base = "/wp-admin/options-general.php?page=recogida_aveonline&paged=";
+                    $url_void = "javascript:void(0)";
+                    $paged_all = ceil(count($customer_orders_total)/$n_page);
+
+                    $next = ($paged-1 > 0)?$paged-1:1;
+                    $prev = ($paged+1 < $paged_all)?$paged+1:$paged_all;
+
+                    $url_base_first = $url_base."1";
+                    $url_base_prev  = $url_base.$next;
+                    $url_base_next  = $url_base.$prev;
+                    $url_base_last  = $url_base.$paged_all;
+
+                    if($paged == 1){
+                        $url_base_first = $url_void;
+                        $url_base_prev  = $url_void;
+                    }
+                    if($paged == $paged_all){
+                        $url_base_next  = $url_void;
+                        $url_base_last  = $url_void;
+                    }
+                    
+                ?>
+                <a class="first-page button <?=($paged == 1)?"disabled":"";?>" href="<?=$url_base_first?>">
+                    <span class="screen-reader-text">First page</span><span aria-hidden="true">«</span>
+                </a>
+                <a class="prev-page button <?=($paged == 1)?"disabled":"";?>" href="<?=$url_base_prev?>">
+                    <span class="screen-reader-text">Prev page</span><span aria-hidden="true">‹</span>
+                </a>
+                <span class="screen-reader-text">Current Page</span>
+                <span id="table-paging" class="paging-input">
+                    <span class="tablenav-paging-text">
+                        <?=$paged?> of <span class="total-pages"><?=$paged_all?></span>
+                    </span>
+                </span>
+                <a class="next-page button <?=($paged == $paged_all)?"disabled":"";?>" href="<?=$url_base_next?>">
+                    <span class="screen-reader-text">Next page</span><span aria-hidden="true">›</span>
+                </a>
+                <a class="last-page button <?=($paged == $paged_all)?"disabled":"";?>" href="<?=$url_base_last?>">
+                    <span class="screen-reader-text">Last page</span><span aria-hidden="true">»</span>
+                </a>
+            </span>
+        </div>
+        <br class="clear">
+    </div>
     <?php
 }
 
@@ -196,9 +269,10 @@ if(isset($_POST) && isset($_POST['generar_recogida'])){
     require_once '../../../../../wp-blog-header.php';
     $order_id = $_POST['order_id'];
 
+    $estado_recogida = get_post_meta( $order_id, 'estado_recogida', true );
     $solicitar_recogida = get_post_meta( $order_id, 'solicitar_recogida', true );
-    if($solicitar_recogida == null){
-        show_order_by_table_recogida($order_id);
+    if("Generada" == $estado_recogida || $solicitar_recogida == null){
+        echo "no change";
         exit;
     }
     $solicitar_recogida = json_decode(base64_decode($solicitar_recogida));
@@ -218,7 +292,8 @@ if(isset($_POST) && isset($_POST['generar_recogida'])){
 
     $recogida = $api->solicitar_recogida($solicitar_recogida);
     if($recogida->status == "ok"){
-        update_post_meta( $order_id, 'estado_recogida', null );
+        update_post_meta( $order_id, 'estado_recogida', "Generada" );
+        //update_post_meta( $order_id, 'estado_recogida', null );
         show_order_by_table_recogida($order_id);
     }else{
         echo "error";
