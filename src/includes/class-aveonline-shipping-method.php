@@ -93,6 +93,12 @@ function aveonline_shipping_method() {
                         'desc_tip' => __( 'NIT Remitente in Aveonline' ),
                         'default' => '',
                     ),
+                    'dsdirre' => array(
+                        'title' => __( 'Direccion Remitente' ),
+                        'type' => 'text',
+                        'desc_tip' => __( 'Direccion Remitente in Aveonline' ),
+                        'default' => '',
+                    ),
                     'dstelre' => array(
                         'title' => __( 'Teléfono Remitente' ),
                         'type' => 'tel',
@@ -114,21 +120,21 @@ function aveonline_shipping_method() {
                 );
                 $form_fields = array_merge($form_fields,$accounts,$agents);
                 $this->form_fields = $form_fields;
-                // $this->form_fields = array_merge( $this->form_fields, array(
-                //     'tag_Paquetes' => array(
-                //         'id'    => 'tag',
-                //         'type'  => 'tag',
-                //         'title' => __( 'Paquetes'),
-                //     ),
-                // )); 
-                // $this->form_fields = array_merge( $this->form_fields, array(
-                //     'table_package' => array(
-                //         'id'    => 'table_package',
-                //         'type'  => 'table_package',
-                //         'title' => __( 'Lista de Paquetes'),
-                //         'desc_tip' => __( 'Lista de Paquetes' ),
-                //     )
-                // )); 
+                $this->form_fields = array_merge( $this->form_fields, array(
+                    'tag_Paquetes' => array(
+                        'id'    => 'tag',
+                        'type'  => 'tag',
+                        'title' => __( 'Paquetes'),
+                    ),
+                )); 
+                $this->form_fields = array_merge( $this->form_fields, array(
+                    'table_package' => array(
+                        'id'    => 'table_package',
+                        'type'  => 'table_package',
+                        'title' => __( 'Lista de Paquetes'),
+                        'desc_tip' => __( 'Lista de Paquetes' ),
+                    )
+                )); 
             }
 
             /**

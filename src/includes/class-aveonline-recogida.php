@@ -110,6 +110,7 @@ function recogida_aveonline_page(){
                 <th scope="col" id="rotulo" class="manage-column column-rotulo">Rotulo</th>
                 <th scope="col" id="estado" class="manage-column column-estado">Estado</th>
                 <th scope="col" id="date" class="manage-column column-date">Fecha</th>
+                <th scope="col" id="date" class="manage-column column-date">Paquete</th>
                 <th scope="col" id="recogida" class="manage-column column-recogida">Generar Recogida</th>
             </tr>
         </thead>
@@ -244,6 +245,16 @@ function show_order_by_table_recogida($order_id){
         </td>
         <td class="date column-date" data-colname="Date">
             <span><?=$order->get_date_created()->format ('d-m-y');?></span>
+        </td>
+        <td class="date column-paquete" data-colname="paquete">
+            <?php
+            $paquete = get_post_meta( $order_id, 'paquete_final', true );
+            if($paquete!=null){
+                echo $paquete->length."x".$paquete->width."x".$paquete->height;
+                echo "<br>";
+                echo "#N: ".$paquete->numeroPaquetes;
+            }
+            ?>
         </td>
         <td class="author column-recogida wp-core-ui" data-colname="Recogida">
             <?php

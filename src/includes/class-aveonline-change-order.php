@@ -168,19 +168,17 @@ function generate_guia($order_id){
                "name"    => $name,
           );
 
-          $volumen += $_product->get_length() * $_product->get_width() * $_product->get_height() * $quantity;
+          //$volumen += $_product->get_length() * $_product->get_width() * $_product->get_height() * $quantity;
 
           $product_name .= $name.", ";
      }
-     $idalto = pow($volumen, 1/3);
-     $idancho = pow($volumen, 1/3);
-     $idlargo = pow($volumen, 1/3);
-     // $package_calcule = calculate_package($table_package , $data_product);
-     // echo '<pre>';
-     // echo "<hr>table_package<hr>";
-     // var_dump($package_calcule);
-     // echo '</pre>';
-     // return;
+     $paquete_final = calculate_package($table_package , $data_product);
+     update_post_meta( $order_id, 'paquete_final', $paquete_final );
+
+     $idalto = $paquete_final->volumen_max;
+     $idancho = $paquete_final->volumen_max;
+     $idlargo = $paquete_final->volumen_max;
+     
      $json_body =  '
      {
           "tipo":"generarGuia",
@@ -188,7 +186,7 @@ function generate_guia($order_id){
           "idempresa":"'.$e['data']->idempresa.'",
           
           "origen":"'.$e['data']->origen.'",
-          "dsdirre":"",
+          "dsdirre":"'.$e['settings']->dsdirre.'",
           "dsbarrioo":"",
           
           "destino":"'.$e['data']->destino.'",
@@ -213,7 +211,7 @@ function generate_guia($order_id){
           "idancho":"'.$idancho.'",
           "idlargo":"'.$idlargo.'",
 
-          "unidades":"'.$e['data']->unidades.'",
+          "unidades":"'.$paquete_final->numeroPaquetes.'",
           "kilos":"'.$e['data']->kilos.'",
           "valordeclarado":"'.$e['data']->valordeclarado.'",
 
@@ -241,47 +239,33 @@ function generate_guia($order_id){
      return send_guia($json_body , $e , $order_data , $order_id);
 }
 function calculate_package($table_package , $data_product){
-     // echo '<pre>';
-     // echo "<hr>table_package<hr>";
-     // var_dump($table_package);
-     // echo "<hr>data_product<hr>";
-     // var_dump($data_product);
-     // echo '</pre>';
+     $volumen_total = 0;
+     //calcular volumen total de productos
+     for ($j=0; $j < count($data_product); $j++) { 
+          $volumen_aux = $data_product[$j]["length"]*$data_product[$j]["width"]*$data_product[$j]["height"];
+          $volumen_aux = pow($volumen_aux, 1/3);
+          $volumen_total += $volumen_aux * $data_product[$j]['quantity'];
+     }
+     //calcular numero de empaques por cajas 
      for ($i=0; $i < count($table_package); $i++) { 
-          $table_package[$i]->products = array();
-          for ($j=0; $j < count($data_product); $j++) { 
-               if(  $table_package[$i]->length > $data_product[$j]["length"] &&
-                    $table_package[$i]->width > $data_product[$j]["width"] &&
-                    $table_package[$i]->height > $data_product[$j]["height"] &&
-                    $data_product[$j]['quantity'] > 0
-               ){
-                    // $k_ = 1 ;
-                    // for ($k=1; $k <= $data_product[$j]['quantity']; $k++) { 
-                    //      if(  $table_package[$i]->length > $data_product[$j]["length"] * $k &&
-                    //           $table_package[$i]->width > $data_product[$j]["width"] * $k &&
-                    //           $table_package[$i]->height > $data_product[$j]["height"] * $k 
-                    //      ){
-                    //           $k_ = $k;
-                    //      }
-                    // }
-                    // $aux_product = $data_product[$j];
-                    // $aux_product['quantity'] = $k_;
-                    // $table_package[$i]->products[] = $aux_product;
-                    // $data_product[$j]['quantity'] -= $k_;
-                    array_push($table_package[$i]->products,  $data_product[$j]);
-                    //$table_package[$i]->products[] = $data_product[$j];
-                    $data_product[$j]['quantity'] = 0;
-               }
+          $volumen_max = $table_package[$i]->length * $table_package[$i]->width * $table_package[$i]->height;
+          $volumen_max = pow($volumen_max, 1/3);
+          
+          $table_package[$i]->volumen_max = $volumen_max;
+          $table_package[$i]->numeroPaquetes = ceil($volumen_total / $volumen_max);
+     }
+     $paquete_final = null;
+     for ($i=0; $i < count($table_package); $i++) { 
+          if($paquete_final == null){
+               $paquete_final = $table_package[$i];
+          }elseif ($table_package[$i]->numeroPaquetes < $paquete_final->numeroPaquetes){
+               $paquete_final = $table_package[$i];
+          }elseif ( $table_package[$i]->numeroPaquetes == $paquete_final->numeroPaquetes &&
+                    $table_package[$i]->volumen_max < $paquete_final->volumen_max) {
+               $paquete_final = $table_package[$i];
           }
      }
-
-     echo '<pre>';
-     echo "<hr>table_package<hr>";
-     var_dump($table_package);
-     echo "<hr>data_product<hr>";
-     var_dump($data_product);
-     echo '</pre>';
-     return $table_package;
+     return $paquete_final;
 }
 //show
 add_action( 'woocommerce_admin_order_data_after_billing_address', 'order_pdf', 10, 1 );
@@ -316,7 +300,7 @@ function order_pdf( $order ) {
 	}
 }
 function wp_aveonline() { 
-     add_function_order_change(418);
+     add_function_order_change(1158);
      //generate_guia(418);
 } 
 add_shortcode('wp_aveonline', 'wp_aveonline'); 
