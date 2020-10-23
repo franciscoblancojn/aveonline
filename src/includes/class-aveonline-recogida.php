@@ -46,6 +46,40 @@ function recogida_aveonline_page(){
     ?>
     <h2 class="screen-reader-text">Orders</h2>
     <script>
+        function validarFechaMenorActual(date){
+            var fecha = date.split("-");
+            var ndate = new Date(date);
+            var today = new Date();
+            val_x       = (parseInt(fecha[0]))+(parseInt(fecha[1])/100)+(parseInt(fecha[2])/10000)
+            val_today   = (today.getFullYear())+((today.getMonth()+1)/100)+(today.getDate()/10000)
+            if(ndate.getDay() == 6){
+                alert("No se permite el domingo")
+                return false;
+            }else if (val_today > val_x){
+                alert("Fecha inferiror al actual")
+                return false;
+            }else if(ndate.getDay() == 5 && val_today == val_x){
+                alert("Para solicitar recogida los sabados, Debes solicitarla mas tarar el Viener")
+                return false;
+            }else if(today.getHours() > 12 && val_today == val_x){
+                alert("Despues de las 12pm no se puede solicitar recogida el mismo dia")
+                return false;
+            }
+            return true;
+        }
+        function validate_fecha(){
+            fecha_recogida = document.getElementById('fecha_recogida')
+            
+            if(fecha_recogida.value == ""){
+                alert("Ingrese fecha de recogida");
+                return false;
+            }
+            if(!validarFechaMenorActual(fecha_recogida.value)){
+                return false;
+            }
+
+            return true;
+        }
         function refes_order(order_id , result){
             if(result == null || result == "error"){
                 alert('Error')
@@ -59,13 +93,19 @@ function recogida_aveonline_page(){
             order.outerHTML = result
         }
         async function generar_recogida(e){
+            if(!validate_fecha())return;
             order_id = e.getAttribute('order_id')
             var myHeaders = new Headers();
             myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
 
             var formdata = new FormData();
+            
+            fecha_recogida = document.getElementById('fecha_recogida')
+            notas = document.getElementById('notas')
             formdata.append("order_id", order_id);
             formdata.append("generar_recogida", 1);
+            formdata.append("fecha_recogida", fecha_recogida.value);
+            formdata.append("notas", notas.value);
 
             var requestOptions = {
                 method: 'POST',
@@ -80,12 +120,37 @@ function recogida_aveonline_page(){
             .catch(error => console.log('error', error));
         }
         async function generar_multiple(){
+            if(!validate_fecha())return;
             select = document.documentElement.querySelectorAll("[id*='cb-select']:not([id='cb-select-all-1']):checked")
+            ids = []
             for (let i = 0; i < select.length; i++) {
                 e = select[i];
-                await generar_recogida(e)
+                ids[i] = e.getAttribute('order_id')
             }
-            document.getElementById('cb-select-all-1').click()
+
+            var myHeaders = new Headers();
+            myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
+
+            var formdata = new FormData();
+            
+            fecha_recogida = document.getElementById('fecha_recogida')
+            notas = document.getElementById('notas')
+            formdata.append("order_ids", ids);
+            formdata.append("generar_recogida_multiple", 1);
+            formdata.append("fecha_recogida", fecha_recogida.value);
+            formdata.append("notas", notas.value);
+
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: formdata,
+                redirect: 'follow'
+            };
+
+            await fetch("<?=plugin_dir_url( __FILE__ )?>class-aveonline-recogida.php", requestOptions)
+            .then(response => response.text())
+            .then(result => window.location.reload())
+            .catch(error => console.log('error', error));
         }
     </script>
     <div class="wp-core-ui" >
@@ -95,6 +160,14 @@ function recogida_aveonline_page(){
             class="button">
                 Generar Recogidas Seleccionadas
             </button> 
+            <label for="">
+                Fecha de recogida
+                <input type="date" id="fecha_recogida" name="fecha_recogida">
+            </label>
+            <label for="">
+                Notas de Recogida
+                <input type="text" name="notas" id="notas" />
+            </label>
         </p>
     </div>
     <table class="wp-list-table widefat fixed striped posts">
@@ -299,8 +372,10 @@ if(isset($_POST) && isset($_POST['generar_recogida'])){
     ));
 
     $solicitar_recogida->token = $token;
+    $solicitar_recogida->fecharecogida = $_POST['fecha_recogida'];
     $solicitar_recogida = json_encode($solicitar_recogida);
-
+    // var_dump($solicitar_recogida);
+    // exit;
     $recogida = $api->solicitar_recogida($solicitar_recogida);
     if($recogida->status == "ok"){
         update_post_meta( $order_id, 'estado_recogida', "Generada" );
@@ -312,6 +387,77 @@ if(isset($_POST) && isset($_POST['generar_recogida'])){
     exit;
 }
 
+if(isset($_POST) && isset($_POST['generar_recogida_multiple'])){
+    require_once '../../../../../wp-blog-header.php';
+    $order_ids = $_POST['order_ids'];
+    $order_ids = explode("," , $order_ids);
+    $order_ids_final = [];
+
+    $unidades = 0;
+    $kilos = 0;
+    $valordeclarado = 0;
+    $dscom = "";
+
+    $solicitar_recogida_init = null;
+    for ($i=0; $i < count($order_ids); $i++) { 
+        $order_id = $order_ids[$i];
+        $estado_recogida = get_post_meta( $order_id, 'estado_recogida', true );
+        $solicitar_recogida = get_post_meta( $order_id, 'solicitar_recogida', true );
+        if("Generada" == $estado_recogida || $solicitar_recogida == null){
+            echo "no change";
+        }else{
+            $solicitar_recogida = json_decode(base64_decode($solicitar_recogida));
+            $order_ids_final[] = $order_id;
+            if($solicitar_recogida_init == null){
+                $solicitar_recogida_init = $solicitar_recogida;
+            }
+            $unidades           += intval($solicitar_recogida->unidades);
+            $kilos              += floatval($solicitar_recogida->kilos);
+            $valordeclarado     += floatval($solicitar_recogida->valordeclarado);
+            $dscom              .= $solicitar_recogida->dscom."--";
+        }
+    }
+    $token = $solicitar_recogida_init->token;
+    $token = json_decode(base64_decode($token));
+
+    require_once './class-aveonline-api.php';
+    $api = new AveonlineAPI(array(),false);
+    $token = $api->get_token(array(
+        'user'      => $token->user,
+        'password'  => $token->password,
+    ));
+
+    $solicitar_recogida_init->token = $token;
+    $solicitar_recogida_init->fecharecogida = $_POST['fecha_recogida'];
+    $solicitar_recogida_init->unidades = $unidades;
+    $solicitar_recogida_init->kilos = $kilos;
+    $solicitar_recogida_init->valordeclarado = $valordeclarado;
+    $solicitar_recogida_init->dscom = $_POST['notas'];
+    $tipoenvio = 3;
+    if($kilos == 1 && $unidades == 1){
+        $tipoenvio = 1;
+    }else if($kilos <=8 && $unidades <= 10){
+        $tipoenvio = 2;
+    }
+    
+
+    $solicitar_recogida_init->tipoenvio = $tipoenvio;
+    
+    $solicitar_recogida_init = json_encode($solicitar_recogida_init);
+    // var_dump($solicitar_recogida);
+    // exit;
+    $recogida = $api->solicitar_recogida($solicitar_recogida_init);
+    if($recogida->status == "ok"){
+        for ($i=0; $i < count($order_ids_final); $i++) { 
+            update_post_meta( $order_ids_final[$i], 'estado_recogida', "Generada" );
+        }
+        //update_post_meta( $order_id, 'estado_recogida', null );
+        //show_order_by_table_recogida($order_id);
+    }else{
+        echo "error";
+    }
+    exit;
+}
 add_action('admin_bar_menu', 'add_recogida_aveonline_option_page', 100);
 
 add_action('admin_menu', 'recogida_aveonline_option_page'); 

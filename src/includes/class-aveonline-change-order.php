@@ -115,7 +115,7 @@ function send_guia($json_body , $e , $order_data , $order_id){
                "unidades":"'.$e['data']->unidades.'",
                "kilos":"'.$e['data']->kilos.'",
                "valordeclarado":"'.$e['data']->valordeclarado.'",
-               "fecharecogida":"'.$e['data']->fecharecogida.'",
+               "fecharecogida":"",
                "dscom":"'.$order_data['customer_note'].'"
           }
           ';
@@ -235,7 +235,6 @@ function generate_guia($order_id){
      }
      ';
      
-     $e['data']->fecharecogida = get_post_meta( $order_id, '_fecharecogida', true );
      return send_guia($json_body , $e , $order_data , $order_id);
 }
 function calculate_package($table_package , $data_product){
@@ -299,8 +298,3 @@ function order_pdf( $order ) {
 		}
 	}
 }
-function wp_aveonline() { 
-     add_function_order_change(1158);
-     //generate_guia(418);
-} 
-add_shortcode('wp_aveonline', 'wp_aveonline'); 

@@ -28,7 +28,7 @@ function init_WC_contraentrega() {
         payment_method[i].onchange = (e) => contraentrega_change(e.target.id == "payment_method_WC_contraentrega");
     }
 }
-window.onload = function () {
+function load_script_contraentrega() {
     init_WC_contraentrega()
     jQuery(document.body).on('updated_checkout', function () {
         init_WC_contraentrega()
@@ -37,3 +37,4 @@ window.onload = function () {
     if(contraentrega_payment!=null && contraentrega_payment!=undefined)
         contraentrega_change(contraentrega_payment.checked)
 }
+//load_script_contraentrega()
