@@ -1,5 +1,6 @@
 <?php
-require_once '../../../../../wp-blog-header.php';
+require_once(preg_replace('/wp-content.*$/','',__DIR__).'wp-load.php');
+
 $data = json_decode(file_get_contents('php://input'), true);
 if(isset($data)){
     $_POST = $data;
@@ -18,9 +19,9 @@ if(isset($_POST["status"]) && $_POST["status"] == "ok"){
         exit;
     }
 
-    $guia = $_POST["guia"];
-    $order_id = $_POST["pedido_id"];
-    $estado = $_POST["estado"];
+    $guia = filter_var( $_POST["guia"] , FILTER_SANITIZE_NUMBER_INT);
+    $order_id = filter_var( $_POST["pedido_id"] , FILTER_SANITIZE_NUMBER_INT);
+    $estado = filter_var( $_POST["estado"] , FILTER_SANITIZE_STRING);
 
     $order = wc_get_order($order_id);
 
