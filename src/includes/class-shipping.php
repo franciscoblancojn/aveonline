@@ -3,35 +3,38 @@
 function aveonline_shipping_method() {
     //if (class_exists( 'WC_aveonline_Shipping_Method' ) )return;
     class WC_aveonline_Shipping_Method extends WC_Shipping_Method {
-        public function __construct( ) {
-            //$this->instance_id 	        = absint( $instance_id );
+        public function __construct( $instance_id = 0) {
+            //parent::__construct( $instance_id );
+            $this->instance_id        = absint( $instance_id );
             $this->id                   = 'wc_aveonline_shipping';
             $this->method_title         = __( 'Aveonline Shipping' );
             $this->method_description   = __( 'Servicios especializados en logística' );
             
+            $this->title                = __( 'Aveonline Shipping' );
             //$this->debug = false;
 
             $this->availability = 'including';
-            // $this->countries = array(
-            //     'CO'  // Colombia
-            //     );
-            $this->init();     
-            
-            $this->title                = __( 'Aveonline Shipping' );
-            $this->enabled              = "yes";
-            
-        }
+            $this->countries = array(
+                'CO'  // Colombia
+                );
 
-        function init() {
+            $this->supports = array(
+                'settings',
+                'shipping-zones',
+                'instance-settings',
+            );
             // Load the settings API
             $this->init_settings();
             $this->init_form_fields();
             // Save settings in admin if you have any defined
             add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
+            
         }
+
         //Fields for the settings page
         function init_form_fields() {
             //pre($this->settings);
+            //return;
             $option_cuenta = array(
                 ''  => "Seleccione Cuenta"    
             );
@@ -464,6 +467,7 @@ function aveonline_shipping_method() {
         }
         public function calculate_shipping( $package = array()) {
             //verifit activation
+            if(!is_checkout())return;
             if($this->settings['enabled'] == 'no'){
                 return;
             }
@@ -508,6 +512,7 @@ function aveonline_shipping_method() {
 
             //generate request
             $request = array(
+                "token"             => $api->get_token(),
                 "destinos"          => $destino,
                 "quantity"          => $paquete_final->numeroPaquetes,
                 "weight"            => $weight,
@@ -518,11 +523,15 @@ function aveonline_shipping_method() {
                 "paquete_final"     => $paquete_final
             );
 
+
             //requeste api
             $r = $api->cotisar($request);
 
             //log
-            pre($r);
+            // pre($r);
+            $value = array();
+            $value['sinContraentrega_send'] = json_encode($request);
+            $value['sinContraentrega_result'] = json_encode($r);
 
             //add rates
             $this->add_rate_request($r , $request['contraentrega'] , $request);
@@ -536,10 +545,14 @@ function aveonline_shipping_method() {
             $r = $api->cotisar($request);
 
             //log contraentrega
-            pre($r);
+            //pre($r);
 
             //add contraentrega
             $this->add_rate_request($r , $request['contraentrega'] , $request);
+
+            $value['Contraentrega_send'] = json_encode($request);
+            $value['Contraentrega_result'] = json_encode($r);
+            update_post_meta(9,'pre',$value);
         }
     }
     
@@ -547,8 +560,8 @@ function aveonline_shipping_method() {
 }
 add_action( 'woocommerce_shipping_init', 'aveonline_shipping_method' );
 
-function add_aveonline_shipping_method( $methods ) {
-    $methods[] = 'WC_aveonline_Shipping_Method';
+function AVSHME_add_aveonline_shipping_method( $methods ) {
+    $methods['wc_aveonline_shipping'] = 'WC_aveonline_Shipping_Method';
     return $methods;
 }
-add_filter( 'woocommerce_shipping_methods', 'add_aveonline_shipping_method' );
+add_filter( 'woocommerce_shipping_methods', 'AVSHME_add_aveonline_shipping_method' );

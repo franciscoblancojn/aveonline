@@ -81,7 +81,10 @@ function AVSHME_relacion_envio_aveonline_page()
 
             await fetch("<?= plugin_dir_url(__FILE__) ?>class-relacion-envio.php", requestOptions)
                 .then(response => response.text())
-                .then(result => console.log(result))
+                .then(result => {
+                    console.log(result)
+                    window.location.reload()
+                })
                 .catch(error => console.log('error', error));
         }
     </script>
@@ -171,7 +174,12 @@ function AVSHME_relacion_envio_aveonline_page()
     </div>
     <?php
 }
-
+function getGuiaByIdOrder($order_id)
+{
+    $guias_rotulos = get_post_meta( $order_id, 'guias_rotulos', true );
+    delete_post_meta($order_id , 'relacion_envio');
+    return $guias_rotulos->numguia;
+}
 if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
     require_once(preg_replace('/wp-content.*$/','',__DIR__).'wp-load.php');
     
@@ -188,10 +196,13 @@ if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
     $api = new AveonlineAPI($settings);
     foreach ($orders as $key => $value) {
         foreach ($value as $key2 => $value2) {
-            $relacion_envio = $api->relacionEnvios(array(
+            $value2 = array_map("getGuiaByIdOrder",$value2);
+            $array_send = array(
                 "transportadora"    => $key2,
                 "guias"             => implode(',', $value2)
-            ));
+            );
+            pre($array_send);
+            $relacion_envio = $api->relacionEnvios($array_send);
             pre($relacion_envio);
         }
     }

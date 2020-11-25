@@ -79,7 +79,7 @@ function load_AveonlineAPI()
             $json_body = '
                 {
                     "tipo":"cotizar",
-                    "token":"'          . $this->get_token() . '",
+                    "token":"'          . $data["token"] . '",
                     "idempresa":"'      . $this->settings['select_cuenta']. '",
                     "origen":"'         . explode('_',$this->settings['select_agentes'])[1] . '",
                     "destino":"'        . $data["destinos"] . '",
@@ -91,7 +91,7 @@ function load_AveonlineAPI()
                     "idasumecosto":"'   . $data["idasumecosto"] . '"
                 }
             ';
-            pre($json_body);
+            //pre($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function AVSHME_generate_guia($data , $order)
@@ -183,7 +183,7 @@ function load_AveonlineAPI()
                 "tipoenvio":"'.             $tipoenvio.'"     
             }
             ';
-            pre($json_body);
+            //pre($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function system_update_guia($data)
@@ -210,7 +210,7 @@ function load_AveonlineAPI()
                 "guias" : "'.               $data['guias'].'"
             }
             ';
-            pre($json_body);
+            //pre($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
     }

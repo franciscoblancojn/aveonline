@@ -1,6 +1,8 @@
 <?php
 
 function AVSHME_add_JS_CSS_footer() {
+    //return;
+    if(is_checkout()){
     ?>
     <style>
         body:not(.wc_contraentrega_on) [id*="wc_contraentrega_on"],
@@ -13,19 +15,6 @@ function AVSHME_add_JS_CSS_footer() {
         }
     </style>
     <script>
-        function load_img(){
-            shipping_method = document.documentElement.querySelectorAll('[for*="shipping_method"], [class*="shipped"]')
-            for(var i = 0 ; i < shipping_method.length ; i++ ){
-                if( shipping_method[i].innerText.indexOf('url_img') > -1 ){
-                    url = shipping_method[i].innerText.split('url_img')[1]
-                    shipping_method[i].innerHTML = shipping_method[i].innerHTML.split('url_img' + url + 'url_img').join("")
-                    shipping_method[i].innerHTML = `
-                        <img src="${url}" width="30"/>
-                    ` +shipping_method[i].innerHTML 
-                }
-            }
-        }
-        load_img()
         function contraentrega_change(_checked) {
             if(_checked){
                 document.body.classList.add('wc_contraentrega_on')
@@ -33,7 +22,7 @@ function AVSHME_add_JS_CSS_footer() {
                 document.body.classList.remove('wc_contraentrega_on')
             }
             e = document.documentElement.querySelector('.shipping_method:checked')
-            
+            if(e == null || e == undefined)return;
             id = ""
             if(!_checked){
                 id = e.id.replace("wc_contraentrega_on","wc_contraentrega_off")
@@ -49,6 +38,7 @@ function AVSHME_add_JS_CSS_footer() {
             }else{
                 p.click()
             }
+            console.log('change');
         }
         function init_WC_contraentrega() {
             payment_method = document.getElementsByName('payment_method')
@@ -58,7 +48,6 @@ function AVSHME_add_JS_CSS_footer() {
         }
         init_WC_contraentrega()
         jQuery(document.body).on('updated_checkout', function () {
-            load_img()
             init_WC_contraentrega()
         });
         
@@ -67,5 +56,6 @@ function AVSHME_add_JS_CSS_footer() {
             contraentrega_change(contraentrega_payment.checked)
     </script>
     <?php
+    }
 }
 add_action( 'wp_footer', 'AVSHME_add_JS_CSS_footer' );

@@ -74,10 +74,20 @@ function AVSHME_recogida_aveonline_page()
         }
 
         function validate_fecha() {
-            fecha_recogida = document.getElementById('fecha_recogida')
+            fecha_recogida      = document.getElementById('fecha_recogida')
+            horainicial         = document.getElementById('horainicial')
+            horafinal           = document.getElementById('horafinal')
 
             if (fecha_recogida.value == "") {
                 alert("Ingrese fecha de recogida");
+                return false;
+            }
+            if (horainicial.value == "") {
+                alert("Ingrese Hora Inicial");
+                return false;
+            }
+            if (horafinal.value == "") {
+                alert("Ingrese Hora final");
                 return false;
             }
             if (!validarFechaMenorActual(fecha_recogida.value)) {
@@ -107,12 +117,17 @@ function AVSHME_recogida_aveonline_page()
 
             var formdata = new FormData();
 
-            fecha_recogida = document.getElementById('fecha_recogida')
-            notas = document.getElementById('notas')
+            fecha_recogida      = document.getElementById('fecha_recogida')
+            horainicial         = document.getElementById('horainicial')
+            horafinal           = document.getElementById('horafinal')
+            notas               = document.getElementById('notas')
+
             formdata.append("order_id", order_id);
             formdata.append("generar_recogida", 1);
             formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
             formdata.append("notas", notas.value);
+            formdata.append("horainicial", horainicial.value);
+            formdata.append("horafinal", horafinal.value);
 
             var requestOptions = {
                 method: 'POST',
@@ -140,12 +155,17 @@ function AVSHME_recogida_aveonline_page()
 
             var formdata = new FormData();
 
-            fecha_recogida = document.getElementById('fecha_recogida')
-            notas = document.getElementById('notas')
+            fecha_recogida      = document.getElementById('fecha_recogida')
+            horainicial         = document.getElementById('horainicial')
+            horafinal           = document.getElementById('horafinal')
+            notas               = document.getElementById('notas')
+
             formdata.append("order_ids", ids);
             formdata.append("generar_recogida_multiple", 1);
             formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
             formdata.append("notas", notas.value);
+            formdata.append("horainicial", horainicial.value);
+            formdata.append("horafinal", horafinal.value);
 
             var requestOptions = {
                 method: 'POST',
@@ -156,7 +176,10 @@ function AVSHME_recogida_aveonline_page()
             //window.location.reload()
             await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
                 .then(response => response.text())
-                .then(result => console.log(result))
+                .then(result =>{
+                    console.log(result)
+                    window.location.reload()
+                })
                 .catch(error => console.log('error', error));
         }
     </script>
@@ -175,6 +198,14 @@ function AVSHME_recogida_aveonline_page()
             <label for="">
                 Fecha de recogida
                 <input type="date" id="fecha_recogida" name="fecha_recogida">
+            </label>
+            <label for="">
+                Hora Inicial
+                <input type="time" id="horainicial" name="horainicial">
+            </label>
+            <label for="">
+                Hora Final
+                <input type="time" id="horafinal" name="horafinal">
             </label>
             <label for="">
                 Notas de Recogida
@@ -371,6 +402,8 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
         'kilos'             => $request['weight'],
         'valordeclarado'    => $request['valor_declarado'],
         'fecharecogida'     => $_POST['fecha_recogida'],
+        'horainicial'       => $_POST['horainicial'],
+        'horafinal'         => $_POST['horafinal'],
         'dscom'             => $_POST['notas'],
     );
     
@@ -449,6 +482,8 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
             'kilos'             => $kilos,
             'valordeclarado'    => $valordeclarado,
             'fecharecogida'     => $_POST['fecha_recogida'],
+            'horainicial'       => $_POST['horainicial'],
+            'horafinal'         => $_POST['horafinal'],
             'dscom'             => $_POST['notas'],
         );
         //pre($data);
