@@ -49,7 +49,7 @@ function AVSHME_relacion_envio_aveonline_page()
         'offset'                    => $n_page * ($paged - 1),
     );
     $customer_orders = wc_get_orders($rd_args);
-    //pre($customer_orders_total);
+    
     ?>
     <h2 class="screen-reader-text">Orders</h2>
     <style>
@@ -201,9 +201,9 @@ if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
                 "transportadora"    => $key2,
                 "guias"             => implode(',', $value2)
             );
-            pre($array_send);
+            
             $relacion_envio = $api->relacionEnvios($array_send);
-            pre($relacion_envio);
+            
         }
     }
     

@@ -71,14 +71,13 @@ function load_AveonlineAPI()
                     "idempresa":"' . $this->settings['select_cuenta'] . '"
                 }
             ';
-            //pre($json_body);
             return $this->request($json_body , $this->API_URL_AGENTE);
         }
         public function cotisar($data = array())
         {
             $json_body = '
                 {
-                    "tipo":"cotizar",
+                    "tipo":"cotizarDoble",
                     "token":"'          . $data["token"] . '",
                     "idempresa":"'      . $this->settings['select_cuenta']. '",
                     "origen":"'         . explode('_',$this->settings['select_agentes'])[1] . '",
@@ -91,7 +90,6 @@ function load_AveonlineAPI()
                     "idasumecosto":"'   . $data["idasumecosto"] . '"
                 }
             ';
-            //pre($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function AVSHME_generate_guia($data , $order)
@@ -158,6 +156,7 @@ function load_AveonlineAPI()
                 "cartaporte":""
             }
             ';
+
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function generarRecogida($data)
@@ -180,11 +179,15 @@ function load_AveonlineAPI()
                 "valordeclarado":"'.        $data['valordeclarado'].'",
                 "fecharecogida":"'.         $data['fecharecogida'].'",
                 "dscom":"'.                 $data['dscom'].'",
-                "tipoenvio":"'.             $tipoenvio.'"     
+                "tipoenvio":"'.             $tipoenvio.'",    
+                "horainicial":"'.           $data['horainicial'].'",
+                "horafinal":"'.             $data['horafinal'].'"
             }
             ';
-            //pre($json_body);
-            return $this->request($json_body , $this->API_URL_QUOTE);
+            $r = $this->request($json_body , $this->API_URL_QUOTE);
+
+           
+            return $r;
         }
         public function system_update_guia($data)
         {
@@ -210,7 +213,6 @@ function load_AveonlineAPI()
                 "guias" : "'.               $data['guias'].'"
             }
             ';
-            //pre($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
     }

@@ -47,10 +47,22 @@ function AVSHME_recogida_aveonline_page()
         'offset'                    => $n_page * ($paged - 1),
     );
     $customer_orders = wc_get_orders($rd_args);
-    //pre($customer_orders_total);
     ?>
     <h2 class="screen-reader-text">Orders</h2>
     <script>
+        function validarHoraDis1(horainicial , horafinal){
+            horainicial = parseInt(horainicial.split(":")[0]) * 60 + parseInt(horainicial.split(":")[1])
+            horafinal   = parseInt(horafinal.split(":")[0]) * 60 + parseInt(horafinal.split(":")[1])
+            if(horafinal < horainicial){
+                alert("HoraFinal no puede ser menor a HoraFinal")
+                return false;
+            }
+            if(horafinal - horainicial < 60){
+                alert("Debe existir almenos una diferencia de una hora entre HoraFinal y HoraInicial")
+                return false;
+            }
+            return true;
+        }
         function validarFechaMenorActual(date) {
             var fecha = date.split("-");
             var ndate = new Date(date);
@@ -91,6 +103,9 @@ function AVSHME_recogida_aveonline_page()
                 return false;
             }
             if (!validarFechaMenorActual(fecha_recogida.value)) {
+                return false;
+            }
+            if (!validarHoraDis1(horainicial.value , horafinal.value)) {
                 return false;
             }
 
@@ -184,13 +199,6 @@ function AVSHME_recogida_aveonline_page()
         }
     </script>
     <div class="wp-core-ui">
-
-        <?php
-        // $tempp = json_decode(requestToken());
-        // echo '<pre>';
-        // var_dump($tempp->token);
-        // echo '</pre>';
-        ?>
         <p>
             <button onclick="generar_multiple()" class="button">
                 Generar Recogidas Seleccionadas
@@ -469,11 +477,7 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
             }
         }
         $settings = get_option( 'woocommerce_wc_aveonline_shipping_settings' ); 
-        // pre($settings);
-        //exit;
-        // $settings = AVSHME_get_settings_aveonline();
-        // pre($settings);
-        // exit;
+
         $api = new AveonlineAPI($settings);
 
         $data = array(
@@ -486,16 +490,8 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
             'horafinal'         => $_POST['horafinal'],
             'dscom'             => $_POST['notas'],
         );
-        //pre($data);
         $recogida = $api->generarRecogida($data);
         
-        // $relacion_envio = $api->relacionEnvios(array(
-        //     "transportadora"    => $idtransportador,
-        //     "guias"             => implode(',', $order_ids_final)
-        // ));
-        pre($recogida);
-        // pre($relacion_envio);
-        //exit;
         if ($recogida->status == "ok" ) {
             for ($i = 0; $i < count($order_ids_final); $i++) {
                 update_post_meta($order_ids_final[$i], 'estado_recogida', "Generada");

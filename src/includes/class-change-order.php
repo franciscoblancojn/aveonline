@@ -26,8 +26,6 @@ function AVSHME_generate_guia($order_id){
         return;
     }
     $r = $api->AVSHME_generate_guia($e["request"], $order);
-    pre($e);
-    pre($r);
     if($r->status == "ok"){
         $guia = $r->resultado->guia;
         update_post_meta( $order_id, 'enable_recogida', true);
@@ -37,7 +35,6 @@ function AVSHME_generate_guia($order_id){
             'numguia'   => $guia->numguia,
             'order_id'  => $order_id
         ));
-        pre($respond);
     }
 }
 //show

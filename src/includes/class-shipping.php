@@ -33,8 +33,7 @@ function aveonline_shipping_method() {
 
         //Fields for the settings page
         function init_form_fields() {
-            //pre($this->settings);
-            //return;
+            
             $option_cuenta = array(
                 ''  => "Seleccione Cuenta"    
             );
@@ -42,7 +41,6 @@ function aveonline_shipping_method() {
                 ''  => "Seleccione Agente"    
             );
             $api = new AveonlineAPI($this->settings);
-            //pre(AVSHME_get_settings_aveonline());
             if(isset($this->settings['user']) && isset($this->settings['password'])){
                 $r = $api->autenticarusuario();
                 if($r->status == 'ok'){
@@ -50,7 +48,7 @@ function aveonline_shipping_method() {
                     for ($i=0; $i < count( $cuentas); $i++) { 
                         $option_cuenta[$cuentas[$i]->usuarios[0]->id] =  $cuentas[$i]->servicio;
                     }
-                    //pre($option_cuenta);
+                    
                     $select_cuenta  =   array(
                         'id'    => 'select_cuenta',
                         'type'  => 'select',
@@ -66,7 +64,7 @@ function aveonline_shipping_method() {
                 }
                 if(isset($this->settings['select_cuenta'])){
                     $r = $api->agentes();
-                    //pre($r);
+                    
                     if($r->status == 'ok'){
                         $agentes =  $r->agentes;
                         for ($i=0; $i < count( $agentes); $i++) { 
@@ -425,7 +423,7 @@ function aveonline_shipping_method() {
             <?php
             return ob_get_clean();
         }
-        public function add_rate_request($r ,$contraentrega = 0 ,$request )
+        public function add_rate_request($r  ,$request )
         {
             //verifit request
             if($r->status == "ok"){
@@ -433,15 +431,10 @@ function aveonline_shipping_method() {
                 foreach ($r->cotizaciones as $key => $value) {
                     //verifict price
                     if($value->total!="000"){
-                        //load image
-                        $add_img = "";
-                        if(isset($value->logoTransportadora) && $value->logoTransportadora!="" && $value->logoTransportadora!="000"){
-                            //$add_img = "url_img".$value->logoTransportadora."url_img";
-                        }
                         //load title and id
                         $titleContraentrega = "";
                         $idContraentrega = "wc_contraentrega_";
-                        if($contraentrega == 1){
+                        if( $value->contraentrega == "true"){
                             $titleContraentrega = "Contraentrega ";
                             $idContraentrega .= "on";
                         }else{
@@ -453,7 +446,7 @@ function aveonline_shipping_method() {
                         $this->add_rate( 
                             array(
                                 'id'      => $value->codTransportadora . $idContraentrega,
-                                'label'   => $titleContraentrega.$value->nombreTransportadora.$add_img,
+                                'label'   => $titleContraentrega.$value->nombreTransportadora,
                                 'cost'    => $value->total,
                                 //add meta dat
                                 'meta_data' => array(
@@ -476,16 +469,12 @@ function aveonline_shipping_method() {
             //performat destination
             $destino = AVSHME_reajuste_code_aveonline(strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")"));
 
-            //pre($destino);
             if(AVSHME_get_code_aveonline($destino) == null)return;
             //declare variable acumilative
             $valordeclarado = 0;
             $weight         = 0;
             $quantity       = 0;
 
-            $contraentrega  = 0;
-            $valorrecaudo   = 0;
-            $idasumecosto   = 0;
             //recorre products
             foreach ($package["contents"] as $clave => $valor) {
                 $_product           = wc_get_product($valor["product_id"]);
@@ -517,41 +506,22 @@ function aveonline_shipping_method() {
                 "quantity"          => $paquete_final->numeroPaquetes,
                 "weight"            => $weight,
                 "valor_declarado"   => $valordeclarado,
-                "contraentrega"     => $contraentrega,
-                "valorrecaudo"      => $valorrecaudo,
-                "idasumecosto"      => $idasumecosto,
+                "contraentrega"     => 1,
+                "valorrecaudo"      => $package['cart_subtotal'],
+                "idasumecosto"      => 1,
                 "paquete_final"     => $paquete_final
             );
 
 
             //requeste api
             $r = $api->cotisar($request);
+            //add rates
+            $this->add_rate_request($r , $request);
 
             //log
-            // pre($r);
             $value = array();
-            $value['sinContraentrega_send'] = json_encode($request);
-            $value['sinContraentrega_result'] = json_encode($r);
-
-            //add rates
-            $this->add_rate_request($r , $request['contraentrega'] , $request);
-
-            //load data for contraentrega
-            $request['contraentrega']  = 1;
-            $request['valorrecaudo']   = $package['cart_subtotal'];
-            $request['idasumecosto']   = 1;
-
-            //requeste api contraentrega
-            $r = $api->cotisar($request);
-
-            //log contraentrega
-            //pre($r);
-
-            //add contraentrega
-            $this->add_rate_request($r , $request['contraentrega'] , $request);
-
-            $value['Contraentrega_send'] = json_encode($request);
-            $value['Contraentrega_result'] = json_encode($r);
+            $value['send'] = json_encode($request);
+            $value['result'] = json_encode($r);
             update_post_meta(9,'pre',$value);
         }
     }
