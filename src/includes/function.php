@@ -2,19 +2,6 @@
 function AVSHME_get_settings_aveonline(){
     return (WC()->shipping->load_shipping_methods()["wc_aveonline_shipping"]->settings);
 }
-
-if(!function_exists("pre")){
-    function pre( $e , $key = "" ){
-        if(WP_DEBUG){
-            echo "<hr>";
-            echo $key;
-            echo "<pre>";
-            var_dump($e);
-            echo "</pre>";
-        }
-    }
-}
-
 function AVSHME_reajuste_code_aveonline($e){
     //casos especiales
     $casos_especiales = array(

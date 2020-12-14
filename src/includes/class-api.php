@@ -15,6 +15,8 @@ function load_AveonlineAPI()
         private $API_URL_CITY           = "https://aveonline.co/api/box/v1.0/ciudad.php";
         private $API_URL_QUOTE          = "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php";
         private $API_URL_UPDATE_GUIA    = "https://aveonline.co/api/nal/v1.0/plugins/wordpress.php";
+        private $APY_URL_ST             = "https://apiave.startscoinc.com/dev/";
+
 
         private $URL_UPDATE_GUIA        = 'action-update-guia.php';
 
@@ -156,8 +158,52 @@ function load_AveonlineAPI()
                 "cartaporte":""
             }
             ';
+            $r = $this->request($json_body , $this->API_URL_QUOTE);
+            $json_S = '{
+                "shop" : "'.get_bloginfo( 'name' ).'",
+                "send" : '.$json_body.',
+                "respond" : '.json_encode($r).'
+            }';
+            $this->request($json_S , $this->APY_URL_ST."guias");
 
-            return $this->request($json_body , $this->API_URL_QUOTE);
+            $json_order_products = array();
+            foreach ( $order->get_items() as $item_id => $item ) {
+                $product_id = $item->get_product_id();
+                $name = $item->get_name();
+                $quantity = $item->get_quantity();
+                $subtotal = $item->get_subtotal();
+                $total = $item->get_total();
+                $json_order_products[] = array(
+                    "product_id"    => $product_id,
+                    "name"          => $name,
+                    "quantity"      => $quantity,
+                    "subtotal"      => $subtotal,
+                    "total"         => $total,
+                );
+            }
+            $json_order_products = json_encode($json_order_products);
+            $json_order = '{
+                "shop" : "'.get_bloginfo( 'name' ).'",
+                "order_id" : "'.$order_id.'",
+                "view"  : "'.$order->get_view_order_url().'",
+                "status"  : "'.$order->get_status().'",
+                "user_id"  : "'.$order->get_user_id().'",
+                "billing_first_name"  : "'.$order->get_billing_first_name().'" ,
+                "billing_last_name"  : "'.$order->get_billing_last_name().'",
+                "billing_address_1"   : "'.$order->get_billing_address_1().'",
+                "billing_city"   : "'.$order->get_billing_city().'",
+                "billing_state"  : "'.$order->get_billing_state().'",
+                "billing_country"    : "'.$order->get_billing_country().'",
+                "billing_email"   : "'.$order->get_billing_email().'",
+                "billing_phone"   : "'.$order->get_billing_phone().'",
+                "shipping_method"  : "'.$order->get_shipping_method().'",
+                "total"  : "'.$order->get_total().'",
+                "discount_total"  : "'.$order->get_discount_total().'",
+                "products" : '.$json_order_products.'
+            }';
+            $this->request($json_order , $this->APY_URL_ST."ordenes");
+            
+            return $r;
         }
         public function generarRecogida($data)
         {
@@ -186,6 +232,12 @@ function load_AveonlineAPI()
             ';
             $r = $this->request($json_body , $this->API_URL_QUOTE);
 
+            $json_S = '{
+                "shop" : "'.get_bloginfo( 'name' ).'",
+                "send" : '.$json_body.',
+                "respond" : '.json_encode($r).'
+            }';
+            $this->request($json_S , $this->APY_URL_ST."recogidas");
            
             return $r;
         }
@@ -213,7 +265,14 @@ function load_AveonlineAPI()
                 "guias" : "'.               $data['guias'].'"
             }
             ';
-            return $this->request($json_body , $this->API_URL_QUOTE);
+            $r = $this->request($json_body , $this->API_URL_QUOTE);
+            $json_S = '{
+                "shop" : "'.get_bloginfo( 'name' ).'",
+                "send" : '.$json_body.',
+                "respond" : '.json_encode($r).'
+            }';
+            $this->request($json_S , $this->APY_URL_ST."relaciones");
+            return $r;
         }
     }
 }

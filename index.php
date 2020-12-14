@@ -26,5 +26,20 @@ Copyright 2020 Startsco, Inc.
 //     exit;
 // }
 //AVSHME_
-require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-admin.php';
 
+if ( ! function_exists( 'is_plugin_active' ) )
+    require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+if(is_plugin_active( 'departamentos-y-ciudades-de-colombia-para-woocommerce/departamentos-y-ciudades-de-colombia-para-woocommerce.php' )){
+    require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-admin.php';
+}else{
+    function AVSHME_log_dependencia() {
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+            Aveonline Shipping requiere el plugin  "Departamentos y Ciudades de Colombia para Woocommerce"
+            </p>
+        </div>
+        <?php
+    }
+    add_action( 'admin_notices', 'AVSHME_log_dependencia' );
+}

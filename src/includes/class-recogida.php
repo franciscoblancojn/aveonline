@@ -54,7 +54,7 @@ function AVSHME_recogida_aveonline_page()
             horainicial = parseInt(horainicial.split(":")[0]) * 60 + parseInt(horainicial.split(":")[1])
             horafinal   = parseInt(horafinal.split(":")[0]) * 60 + parseInt(horafinal.split(":")[1])
             if(horafinal < horainicial){
-                alert("HoraFinal no puede ser menor a HoraFinal")
+                alert("HoraFinal no puede ser menor a HoraInical")
                 return false;
             }
             if(horafinal - horainicial < 60){
@@ -136,7 +136,10 @@ function AVSHME_recogida_aveonline_page()
             horainicial         = document.getElementById('horainicial')
             horafinal           = document.getElementById('horafinal')
             notas               = document.getElementById('notas')
-
+            if(notas.value.split(" ").join("")==""){
+                alert("Debes agregar Notas de envio")
+                return
+            }
             formdata.append("order_id", order_id);
             formdata.append("generar_recogida", 1);
             formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
@@ -174,7 +177,10 @@ function AVSHME_recogida_aveonline_page()
             horainicial         = document.getElementById('horainicial')
             horafinal           = document.getElementById('horafinal')
             notas               = document.getElementById('notas')
-
+            if(notas.value.split(" ").join("")==""){
+                alert("Debes agregar Notas de envio")
+                return
+            }
             formdata.append("order_ids", ids);
             formdata.append("generar_recogida_multiple", 1);
             formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
@@ -209,11 +215,11 @@ function AVSHME_recogida_aveonline_page()
             </label>
             <label for="">
                 Hora Inicial
-                <input type="time" id="horainicial" name="horainicial">
+                <input type="time" id="horainicial" name="horainicial" >
             </label>
             <label for="">
                 Hora Final
-                <input type="time" id="horafinal" name="horafinal">
+                <input type="time" id="horafinal" name="horafinal" >
             </label>
             <label for="">
                 Notas de Recogida
@@ -254,7 +260,7 @@ function AVSHME_recogida_aveonline_page()
             <span class="displaying-num"><?= count($customer_orders_total) ?> items</span>
             <span class="pagination-links">
                 <?php
-                $url_base = "/wp-admin/options-general.php?page=recogida_aveonline&paged=";
+                $url_base = get_site_url()."/wp-admin/options-general.php?page=recogida_aveonline&paged=";
                 $url_void = "javascript:void(0)";
                 $paged_all = ceil(count($customer_orders_total) / $n_page);
 
@@ -325,7 +331,7 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
         <td class="title column-title has-row-actions column-primary page-order" data-colname="Title">
             <div class="locked-info"><span class="locked-avatar"></span> <span class="locked-text"></span></div>
             <strong>
-                <a class="row-title" href="/wp-admin/post.php?post=<?= $order_id ?>&action=edit">
+                <a class="row-title" href="<?=get_site_url()?>/wp-admin/post.php?post=<?= $order_id ?>&action=edit">
                     #<?= $order_id ?>
                 </a>
             </strong>
@@ -365,7 +371,7 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
         </td>
         <td class="author column-recogida wp-core-ui" data-colname="Recogida">
             <?php
-            if ($estado_recogida == null) {
+            if ($estado_recogida == null && $guias_rotulos->numguia!="000") {
             ?>
                 <p>
                     <button order_id="<?= $order_id ?>" onclick="generar_recogida(this)" class="button">
@@ -393,6 +399,7 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
         exit;
     }
     $order = wc_get_order( $order_id );
+    $method = $order->get_shipping_method();
     $settings = AVSHME_get_settings_aveonline();
     $api = new AveonlineAPI($settings);
     foreach ($order->get_items( 'shipping' ) as $item) {
@@ -419,6 +426,9 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     
     if ($recogida->status == "ok") {
         update_post_meta($order_id, 'estado_recogida', "Generada");
+        update_post_meta($order_id, 'relacion_envio', true);
+        update_post_meta($order_id, 'metodo_envio', $method);
+        update_post_meta($order_id, 'transportadora', $request['idtransportador']);
         AVSHME_show_order_by_table_recogida($order_id);
     } else {
         echo "error";

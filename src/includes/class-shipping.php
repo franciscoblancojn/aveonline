@@ -439,6 +439,9 @@ function aveonline_shipping_method() {
                             $idContraentrega .= "on";
                         }else{
                             $idContraentrega .= "off";
+
+                            $request['contraentrega'] = 0;
+                            $request['valorrecaudo'] = 0;
                         }
 
                         $request['idtransportador'] = $value->codTransportadora;
@@ -460,10 +463,10 @@ function aveonline_shipping_method() {
         }
         public function calculate_shipping( $package = array()) {
             //verifit activation
-            if(!is_checkout())return;
-            if($this->settings['enabled'] == 'no'){
-                return;
-            }
+            //if(!is_checkout())return;
+            // if($this->settings['enabled'] == 'no'){
+            //     return;
+            // }
             //load api
             $api = new AveonlineAPI($this->settings);
             //performat destination

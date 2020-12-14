@@ -23,6 +23,88 @@ function AVSHME_relacion_envio_aveonline_option_page()
     );
 }
 
+function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
+{
+    if ($order_id == null)  return;
+
+    $order = wc_get_order($order_id);
+    if ($order == null)  return;
+
+    $guias_rotulos = get_post_meta($order_id, 'guias_rotulos', true);
+    if ($guias_rotulos == null )  return;
+    $estado_recogida = get_post_meta($order_id, 'estado_recogida', true);
+    $relacion_envio_generada = get_post_meta( $order_id, 'relacion_envio_generada', true );
+    $rutaimpresion = get_post_meta( $order_id, 'rutaimpresion', true );
+    ?>
+    <tr id="post-<?= $order_id ?>" class="<?= ($estado_recogida == null) ? "no_generado_recogida" : "" ?>
+        iedit author-self level-0 post-<?= $order_id ?> type-post status-publish format-standard hentry category-uncategorized">
+        <th scope="row" class="check-column" data-children-count="1">
+            <label class="screen-reader-text" for="cb-select-<?= $order_id ?>"></label>
+            <input id="cb-select-<?= $order_id ?>" order_id="<?= $order_id ?>" 
+            type="checkbox" name="post[]" value="<?= $order_id ?>" 
+            <?php echo ($relacion_envio_generada == null || $relacion_envio_generada == "" )? '' : 'disabled' ?>>
+            <div class="locked-indicator">
+                <span class="locked-indicator-icon" aria-hidden="true"></span>
+                <span class="screen-reader-text"></span>
+            </div>
+        </th>
+        <td class="title column-title has-row-actions column-primary page-order" data-colname="Title">
+            <div class="locked-info"><span class="locked-avatar"></span> <span class="locked-text"></span></div>
+            <strong>
+                <a class="row-title" href="<?=get_site_url()?>/wp-admin/post.php?post=<?= $order_id ?>&action=edit">
+                    #<?= $order_id ?>
+                </a>
+            </strong>
+        </td>
+
+        <td class="author column-guia" data-colname="Guia">
+            <a target="_blank" href="<?=$guias_rotulos->rutaguia;?>">
+                <?=$guias_rotulos->mensaje;?>
+            </a>
+        </td>
+        <td class="author column-rotulo" data-colname="Rotulo">
+            <a target="_blank" href="<?=$guias_rotulos->rotulo;?>">
+                <?=$guias_rotulos->numguia;?>
+            </a>
+        </td>
+        <td class="author column-relacion" data-colname="relacion">
+            <?php
+                if ($rutaimpresion == null || $rutaimpresion == "") {
+                    echo "No generada";
+                }else{
+                    ?>
+                    <a href="<?=$rutaimpresion->rutaimpresion?>" target="_blank">
+                        <?=$rutaimpresion->relacionenvio?>
+                    </a>
+                    <?php
+                }
+            ?>
+        </td>
+        <td class="author column-estado" data-colname="Estado">
+            <?php
+            if ($relacion_envio_generada == null || $relacion_envio_generada == "") {
+                echo "No generada";
+            } else {
+                echo "Generada";
+            }
+            ?>
+        </td>
+        <td class="date column-date" data-colname="Date">
+            <span><?= $order->get_date_created()->format('d-m-y'); ?></span>
+        </td>
+        <td class="date column-paquete" data-colname="paquete">
+            <?php
+            $paquete = get_post_meta($order_id, 'paquete_final', true);
+            if ($paquete != null) {
+                echo $paquete['length'] . "x" . $paquete['width'] . "x" . $paquete['height'];
+                echo "<br>";
+                echo "#N: " . $paquete['numeroPaquetes'];
+            }
+            ?>
+        </td>
+    </tr>
+<?php
+}
 function AVSHME_relacion_envio_aveonline_page()
 {
     
@@ -106,17 +188,17 @@ function AVSHME_relacion_envio_aveonline_page()
                 <th scope="col" id="order" class="manage-column column-order column-primary">Orden</th>
                 <th scope="col" id="guia" class="manage-column column-guia">Guia</th>
                 <th scope="col" id="rotulo" class="manage-column column-rotulo">Rotulo</th>
+                <th scope="col" id="rotulo" class="manage-column column-relacion_envio">Relacion de Envio</th>
                 <th scope="col" id="estado" class="manage-column column-estado">Estado</th>
                 <th scope="col" id="date" class="manage-column column-date">Fecha</th>
                 <th scope="col" id="date" class="manage-column column-date">Paquete</th>
-                <th scope="col" id="recogida" class="manage-column column-recogida">Generar Recogida</th>
             </tr>
         </thead>
 
         <tbody id="the-list">
             <?php
             for ($i = 0; $i < count($customer_orders); $i++) {
-                AVSHME_show_order_by_table_recogida($customer_orders[$i],false);
+                AVSHME_show_order_by_table_relacion_envia($customer_orders[$i],false);
             }
             ?>
         </tbody>
@@ -128,7 +210,7 @@ function AVSHME_relacion_envio_aveonline_page()
             <span class="displaying-num"><?= count($customer_orders_total) ?> items</span>
             <span class="pagination-links">
                 <?php
-                $url_base = "/wp-admin/options-general.php?page=recogida_aveonline&paged=";
+                $url_base = get_site_url()."/wp-admin/options-general.php?page=recogida_aveonline&paged=";
                 $url_void = "javascript:void(0)";
                 $paged_all = ceil(count($customer_orders_total) / $n_page);
 
@@ -177,7 +259,7 @@ function AVSHME_relacion_envio_aveonline_page()
 function getGuiaByIdOrder($order_id)
 {
     $guias_rotulos = get_post_meta( $order_id, 'guias_rotulos', true );
-    delete_post_meta($order_id , 'relacion_envio');
+    update_post_meta( $order_id, 'relacion_envio_generada', true );
     return $guias_rotulos->numguia;
 }
 if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
@@ -190,20 +272,21 @@ if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
         $metodo_envio = get_post_meta($order_ids[$i], 'metodo_envio', true);
         $transportadora = get_post_meta($order_ids[$i], 'transportadora', true);
         $orders[$metodo_envio][$transportadora][] =  $order_ids[$i];
-
     }
     $settings = AVSHME_get_settings_aveonline();
     $api = new AveonlineAPI($settings);
     foreach ($orders as $key => $value) {
         foreach ($value as $key2 => $value2) {
-            $value2 = array_map("getGuiaByIdOrder",$value2);
+            $array_guias = array_map("getGuiaByIdOrder",$value2);
             $array_send = array(
                 "transportadora"    => $key2,
-                "guias"             => implode(',', $value2)
+                "guias"             => implode(',', $array_guias)
             );
             
             $relacion_envio = $api->relacionEnvios($array_send);
-            
+            for ($n=0; $n < count($value2); $n++) { 
+                update_post_meta( $value2[$n], 'rutaimpresion', $relacion_envio );
+            }
         }
     }
     
