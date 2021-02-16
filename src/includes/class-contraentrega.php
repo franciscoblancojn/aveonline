@@ -21,8 +21,8 @@ function AVSHME_woocommerce_Contraentrega_gateway()
             
             //$this->icon = plugin_dir_url( __FILE__ )."../img/c21.svg";
             $this->has_fields = false; // in case you need a custom credit card form
-            $this->method_title = 'Contraentrega Gateway';
-            $this->title = 'Contraentrega Gateway';
+            $this->method_title = 'Contraentrega Aveonline';
+            $this->title = 'Contraentrega Aveonline';
             $this->method_description = 'Description of Contraentrega payment gateway'; // will be displayed on the options page
          
             // gateways can support subscriptions, refunds, saved payment methods,
