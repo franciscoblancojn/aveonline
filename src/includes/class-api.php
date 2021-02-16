@@ -155,7 +155,10 @@ function load_AveonlineAPI()
                 "enviarcorreos":"",
                 "guiahija":"",
                 "accesoila":"",
-                "cartaporte":""
+                "cartaporte":"",
+                "bloquegenerarguia":"1",
+                "enviarcorreos":"1",
+                "relacion_envios":"0"
             }
             ';
             $r = $this->request($json_body , $this->API_URL_QUOTE);

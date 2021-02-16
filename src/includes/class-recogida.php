@@ -24,6 +24,9 @@ function AVSHME_recogida_aveonline_option_page()
 
 function AVSHME_recogida_aveonline_page()
 {
+    date_default_timezone_set("America/Bogota");
+
+
     $rd_args_total = array(
         'meta_key'      => 'enable_recogida',
         'meta_compare'  => 'EXISTS',
@@ -49,184 +52,193 @@ function AVSHME_recogida_aveonline_page()
     $customer_orders = wc_get_orders($rd_args);
     ?>
     <h2 class="screen-reader-text">Orders</h2>
-    <script>
-        function validarHoraDis1(horainicial , horafinal){
-            horainicial = parseInt(horainicial.split(":")[0]) * 60 + parseInt(horainicial.split(":")[1])
-            horafinal   = parseInt(horafinal.split(":")[0]) * 60 + parseInt(horafinal.split(":")[1])
-            if(horafinal < horainicial){
-                alert("HoraFinal no puede ser menor a HoraInical")
-                return false;
-            }
-            if(horafinal - horainicial < 60){
-                alert("Debe existir almenos una diferencia de una hora entre HoraFinal y HoraInicial")
-                return false;
-            }
-            return true;
+    <?php
+        $HG = date("G");
+        if($HG >=11){
+            echo "<h1>No pueden generarce recogidas despues de las 11am</h1>";
+        }else{
+            ?>
+            <script>
+                function validarHoraDis1(horainicial , horafinal){
+                    horainicial = parseInt(horainicial.split(":")[0]) * 60 + parseInt(horainicial.split(":")[1])
+                    horafinal   = parseInt(horafinal.split(":")[0]) * 60 + parseInt(horafinal.split(":")[1])
+                    if(horafinal < horainicial){
+                        alert("HoraFinal no puede ser menor a HoraInical")
+                        return false;
+                    }
+                    if(horafinal - horainicial < 60){
+                        alert("Debe existir almenos una diferencia de una hora entre HoraFinal y HoraInicial")
+                        return false;
+                    }
+                    return true;
+                }
+                function validarFechaMenorActual(date) {
+                    var fecha = date.split("-");
+                    var ndate = new Date(date);
+                    var today = new Date();
+                    val_x = (parseInt(fecha[0])) + (parseInt(fecha[1]) / 100) + (parseInt(fecha[2]) / 10000)
+                    val_today = (today.getFullYear()) + ((today.getMonth() + 1) / 100) + (today.getDate() / 10000)
+                    if (ndate.getDay() == 6) {
+                        alert("No se permite el domingo")
+                        return false;
+                    } else if (val_today > val_x) {
+                        alert("Fecha inferiror al actual")
+                        return false;
+                    } else if (ndate.getDay() == 5 && val_today == val_x) {
+                        alert("Para solicitar recogida los sabados, Debes solicitarla mas tarar el Viener")
+                        return false;
+                    } else if (today.getHours() > 12 && val_today == val_x) {
+                        alert("Despues de las 12pm no se puede solicitar recogida el mismo dia")
+                        return false;
+                    }
+                    return true;
+                }
+        
+                function validate_fecha() {
+                    fecha_recogida      = document.getElementById('fecha_recogida')
+                    horainicial         = document.getElementById('horainicial')
+                    horafinal           = document.getElementById('horafinal')
+        
+                    if (fecha_recogida.value == "") {
+                        alert("Ingrese fecha de recogida");
+                        return false;
+                    }
+                    if (horainicial.value == "") {
+                        alert("Ingrese Hora Inicial");
+                        return false;
+                    }
+                    if (horafinal.value == "") {
+                        alert("Ingrese Hora final");
+                        return false;
+                    }
+                    if (!validarFechaMenorActual(fecha_recogida.value)) {
+                        return false;
+                    }
+                    if (!validarHoraDis1(horainicial.value , horafinal.value)) {
+                        return false;
+                    }
+        
+                    return true;
+                }
+        
+                function refes_order(order_id, result) {
+                    if (result == null || result == "error") {
+                        alert('Error')
+                        return
+                    }
+                    if (result == "no change") {
+                        console.log(order_id, result)
+                        return
+                    }
+                    order = document.getElementById(`post-${order_id}`)
+                    order.outerHTML = result
+                }
+                async function generar_recogida(e) {
+                    if (!validate_fecha()) return;
+                    order_id = e.getAttribute('order_id')
+                    var myHeaders = new Headers();
+                    myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
+        
+                    var formdata = new FormData();
+        
+                    fecha_recogida      = document.getElementById('fecha_recogida')
+                    horainicial         = document.getElementById('horainicial')
+                    horafinal           = document.getElementById('horafinal')
+                    notas               = document.getElementById('notas')
+                    if(notas.value.split(" ").join("")==""){
+                        alert("Debes agregar Notas de envio")
+                        return
+                    }
+                    formdata.append("order_id", order_id);
+                    formdata.append("generar_recogida", 1);
+                    formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
+                    formdata.append("notas", notas.value);
+                    formdata.append("horainicial", horainicial.value);
+                    formdata.append("horafinal", horafinal.value);
+        
+                    var requestOptions = {
+                        method: 'POST',
+                        headers: myHeaders,
+                        body: formdata,
+                        redirect: 'follow'
+                    };
+        
+                    await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
+                        .then(response => response.text())
+                        .then(result => refes_order(order_id, result))
+                        .catch(error => console.log('error', error));
+                }
+                async function generar_multiple() {
+                    if (!validate_fecha()) return;
+                    select = document.documentElement.querySelectorAll("[id*='cb-select']:not([id='cb-select-all-1']):checked")
+                    ids = []
+                    for (let i = 0; i < select.length; i++) {
+                        e = select[i];
+                        ids[i] = e.getAttribute('order_id')
+                    }
+        
+                    var myHeaders = new Headers();
+                    myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
+        
+                    var formdata = new FormData();
+        
+                    fecha_recogida      = document.getElementById('fecha_recogida')
+                    horainicial         = document.getElementById('horainicial')
+                    horafinal           = document.getElementById('horafinal')
+                    notas               = document.getElementById('notas')
+                    if(notas.value.split(" ").join("")==""){
+                        alert("Debes agregar Notas de envio")
+                        return
+                    }
+                    formdata.append("order_ids", ids);
+                    formdata.append("generar_recogida_multiple", 1);
+                    formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
+                    formdata.append("notas", notas.value);
+                    formdata.append("horainicial", horainicial.value);
+                    formdata.append("horafinal", horafinal.value);
+        
+                    var requestOptions = {
+                        method: 'POST',
+                        headers: myHeaders,
+                        body: formdata,
+                        redirect: 'follow'
+                    };
+                    //window.location.reload()
+                    await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
+                        .then(response => response.text())
+                        .then(result =>{
+                            console.log(result)
+                            window.location.reload()
+                        })
+                        .catch(error => console.log('error', error));
+                }
+            </script>
+            <div class="wp-core-ui">
+                <p>
+                    <button onclick="generar_multiple()" class="button">
+                        Generar Recogidas Seleccionadas
+                    </button>
+                    <label for="" hidden>
+                        Fecha de recogida
+                        <input type="date" id="fecha_recogida" name="fecha_recogida" value="<?=date("Y-m-d");?>">
+                    </label>
+                    <label for="">
+                        Hora Inicial
+                        <input type="time" id="horainicial" name="horainicial" >
+                    </label>
+                    <label for="">
+                        Hora Final
+                        <input type="time" id="horafinal" name="horafinal" >
+                    </label>
+                    <label for="">
+                        Notas de Recogida
+                        <input type="text" name="notas" id="notas" />
+                    </label>
+                </p>
+            </div>
+            <?php
         }
-        function validarFechaMenorActual(date) {
-            var fecha = date.split("-");
-            var ndate = new Date(date);
-            var today = new Date();
-            val_x = (parseInt(fecha[0])) + (parseInt(fecha[1]) / 100) + (parseInt(fecha[2]) / 10000)
-            val_today = (today.getFullYear()) + ((today.getMonth() + 1) / 100) + (today.getDate() / 10000)
-            if (ndate.getDay() == 6) {
-                alert("No se permite el domingo")
-                return false;
-            } else if (val_today > val_x) {
-                alert("Fecha inferiror al actual")
-                return false;
-            } else if (ndate.getDay() == 5 && val_today == val_x) {
-                alert("Para solicitar recogida los sabados, Debes solicitarla mas tarar el Viener")
-                return false;
-            } else if (today.getHours() > 12 && val_today == val_x) {
-                alert("Despues de las 12pm no se puede solicitar recogida el mismo dia")
-                return false;
-            }
-            return true;
-        }
-
-        function validate_fecha() {
-            fecha_recogida      = document.getElementById('fecha_recogida')
-            horainicial         = document.getElementById('horainicial')
-            horafinal           = document.getElementById('horafinal')
-
-            if (fecha_recogida.value == "") {
-                alert("Ingrese fecha de recogida");
-                return false;
-            }
-            if (horainicial.value == "") {
-                alert("Ingrese Hora Inicial");
-                return false;
-            }
-            if (horafinal.value == "") {
-                alert("Ingrese Hora final");
-                return false;
-            }
-            if (!validarFechaMenorActual(fecha_recogida.value)) {
-                return false;
-            }
-            if (!validarHoraDis1(horainicial.value , horafinal.value)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        function refes_order(order_id, result) {
-            if (result == null || result == "error") {
-                alert('Error')
-                return
-            }
-            if (result == "no change") {
-                console.log(order_id, result)
-                return
-            }
-            order = document.getElementById(`post-${order_id}`)
-            order.outerHTML = result
-        }
-        async function generar_recogida(e) {
-            if (!validate_fecha()) return;
-            order_id = e.getAttribute('order_id')
-            var myHeaders = new Headers();
-            myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
-
-            var formdata = new FormData();
-
-            fecha_recogida      = document.getElementById('fecha_recogida')
-            horainicial         = document.getElementById('horainicial')
-            horafinal           = document.getElementById('horafinal')
-            notas               = document.getElementById('notas')
-            if(notas.value.split(" ").join("")==""){
-                alert("Debes agregar Notas de envio")
-                return
-            }
-            formdata.append("order_id", order_id);
-            formdata.append("generar_recogida", 1);
-            formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
-            formdata.append("notas", notas.value);
-            formdata.append("horainicial", horainicial.value);
-            formdata.append("horafinal", horafinal.value);
-
-            var requestOptions = {
-                method: 'POST',
-                headers: myHeaders,
-                body: formdata,
-                redirect: 'follow'
-            };
-
-            await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
-                .then(response => response.text())
-                .then(result => refes_order(order_id, result))
-                .catch(error => console.log('error', error));
-        }
-        async function generar_multiple() {
-            if (!validate_fecha()) return;
-            select = document.documentElement.querySelectorAll("[id*='cb-select']:not([id='cb-select-all-1']):checked")
-            ids = []
-            for (let i = 0; i < select.length; i++) {
-                e = select[i];
-                ids[i] = e.getAttribute('order_id')
-            }
-
-            var myHeaders = new Headers();
-            myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
-
-            var formdata = new FormData();
-
-            fecha_recogida      = document.getElementById('fecha_recogida')
-            horainicial         = document.getElementById('horainicial')
-            horafinal           = document.getElementById('horafinal')
-            notas               = document.getElementById('notas')
-            if(notas.value.split(" ").join("")==""){
-                alert("Debes agregar Notas de envio")
-                return
-            }
-            formdata.append("order_ids", ids);
-            formdata.append("generar_recogida_multiple", 1);
-            formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
-            formdata.append("notas", notas.value);
-            formdata.append("horainicial", horainicial.value);
-            formdata.append("horafinal", horafinal.value);
-
-            var requestOptions = {
-                method: 'POST',
-                headers: myHeaders,
-                body: formdata,
-                redirect: 'follow'
-            };
-            //window.location.reload()
-            await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
-                .then(response => response.text())
-                .then(result =>{
-                    console.log(result)
-                    window.location.reload()
-                })
-                .catch(error => console.log('error', error));
-        }
-    </script>
-    <div class="wp-core-ui">
-        <p>
-            <button onclick="generar_multiple()" class="button">
-                Generar Recogidas Seleccionadas
-            </button>
-            <label for="">
-                Fecha de recogida
-                <input type="date" id="fecha_recogida" name="fecha_recogida">
-            </label>
-            <label for="">
-                Hora Inicial
-                <input type="time" id="horainicial" name="horainicial" >
-            </label>
-            <label for="">
-                Hora Final
-                <input type="time" id="horafinal" name="horafinal" >
-            </label>
-            <label for="">
-                Notas de Recogida
-                <input type="text" name="notas" id="notas" />
-            </label>
-        </p>
-    </div>
+    ?>
     <table class="wp-list-table widefat fixed striped posts">
         <thead>
             <tr>
