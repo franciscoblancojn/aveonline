@@ -480,6 +480,9 @@ function aveonline_shipping_method() {
 
             //recorre products
             foreach ($package["contents"] as $clave => $valor) {
+                if($valor['variation_id']!=0){
+                    $valor["product_id"] = $valor['variation_id'];
+                }
                 $_product           = wc_get_product($valor["product_id"]);
                 $weight             += $_product->get_weight()*$valor["quantity"];
                 $quantity           += $valor["quantity"];
