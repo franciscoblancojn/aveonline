@@ -488,6 +488,10 @@ function aveonline_shipping_method() {
                 $quantity           += $valor["quantity"];
 
                 $_valor_declarado 	= get_post_meta($valor["product_id"],'_custom_valor_declarado' , true);
+
+                if(0==floatval($_valor_declarado)){
+                    $_valor_declarado = $_product->get_price();
+                }
                 $valordeclarado	    += floatval($_valor_declarado) * floatval($valor["quantity"]);
             
                 
@@ -517,6 +521,7 @@ function aveonline_shipping_method() {
                 "idasumecosto"      => 1,
                 "paquete_final"     => $paquete_final
             );
+            update_post_meta(10,"log",json_encode($request));
 
 
             //requeste api
