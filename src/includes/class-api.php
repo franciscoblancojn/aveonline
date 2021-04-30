@@ -95,9 +95,9 @@ function load_AveonlineAPI()
                     "contraentrega":"'  . $data["contraentrega"] . '",
                     "valorrecaudo":"'   . $data["valorrecaudo"] . '",
                     "idasumecosto":"'   . $data["idasumecosto"] . '",
-                    "idalto": "'.$data['paquete_final']['height'].'",
-                    "idancho": "'.$data['paquete_final']['width'].'",
-                    "idlargo": "'.$data['paquete_final']['length'].'"
+                    "idalto": "'.$data['paquete_final']->height.'",
+                    "idancho": "'.$data['paquete_final']->width.'",
+                    "idlargo": "'.$data['paquete_final']->length.'"
                 }
             ';
             return $this->request($json_body , $this->API_URL_QUOTE);
