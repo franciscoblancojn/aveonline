@@ -8631,3 +8631,14 @@ function AVSHME_calculate_package($table_package , $data_product){
     }
     return $paquete_final;
 }
+function AVSHME_addLogAveonline($newLog)
+{
+    $log = get_option("AVSHME_log");
+    if($log === false || $log == null || $log == ""){
+        $log = "[]";
+    }
+    $log = json_decode($log);
+    $log[] = $newLog;
+    $log = array_slice($log, -10,10); 
+    update_option("AVSHME_log",json_encode($log));
+}

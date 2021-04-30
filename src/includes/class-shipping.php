@@ -521,7 +521,6 @@ function aveonline_shipping_method() {
                 "idasumecosto"      => 1,
                 "paquete_final"     => $paquete_final
             );
-            update_post_meta(10,"log",json_encode($request));
 
 
             //requeste api

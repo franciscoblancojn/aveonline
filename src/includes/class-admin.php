@@ -2,6 +2,7 @@
 
 
 require_once plugin_dir_path( __FILE__ ) . 'function.php';
+require_once plugin_dir_path( __FILE__ ) . 'log.php';
 require_once plugin_dir_path( __FILE__ ) . 'hook.php';
 require_once plugin_dir_path( __FILE__ ) . 'class-api.php';
 //require_once plugin_dir_path( __FILE__ ) . 'option_page.php';
