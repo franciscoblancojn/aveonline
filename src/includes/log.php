@@ -15,8 +15,8 @@ function add_AVSHME_logAveonline_aveonline_option_page($admin_bar)
 function AVSHME_logAveonline_aveonline_option_page()
 {
     add_options_page(
-        'Relacion de envio Aveonline',
-        'Relacion de envios Aveonline',
+        'Log Aveonline',
+        'Log Aveonline',
         'manage_options',
         'logAveonline_aveonline',
         'AVSHME_logAveonline_aveonline_page'
