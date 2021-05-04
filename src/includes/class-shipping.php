@@ -522,6 +522,10 @@ function aveonline_shipping_method() {
                 "paquete_final"     => $paquete_final
             );
 
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre cotizar",
+                "send"=>json_encode($request)
+            ));
 
             //requeste api
             $r = $api->cotisar($request);

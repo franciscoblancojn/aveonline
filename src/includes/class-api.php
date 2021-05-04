@@ -104,6 +104,10 @@ function load_AveonlineAPI()
                     "idlargo": "'.$data['paquete_final']->length.'"
                 }
             ';
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre cotizar api",
+                "send"=>json_decode($json_body)
+            ));
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function AVSHME_generate_guia($data , $order)
