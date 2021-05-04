@@ -468,16 +468,30 @@ function aveonline_shipping_method() {
             //     return;
             // }
             //load api
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre new api"
+            ));
             $api = new AveonlineAPI($this->settings);
+            AVSHME_addLogAveonline(array(
+                "type"=>"post new api"
+            ));
             //performat destination
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre destino"
+            ));
             $destino = AVSHME_reajuste_code_aveonline(strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")"));
+            AVSHME_addLogAveonline(array(
+                "type"=>"post destino"
+            ));
 
             if(AVSHME_get_code_aveonline($destino) == null)return;
             //declare variable acumilative
             $valordeclarado = 0;
             $weight         = 0;
             $quantity       = 0;
-
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre products"
+            ));
             //recorre products
             foreach ($package["contents"] as $clave => $valor) {
                 if($valor['variation_id']!=0){
@@ -503,12 +517,27 @@ function aveonline_shipping_method() {
                     "quantity"=> $valor["quantity"],
                 );
             }
+            AVSHME_addLogAveonline(array(
+                "type"=>"post products"
+            ));
             //load table packge configuration
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre table_package"
+            ));
             $table_package = json_decode($this->settings['table_package']);
+            AVSHME_addLogAveonline(array(
+                "type"=>"post table_package"
+            ));
 
             //calculate packge final
+            AVSHME_addLogAveonline(array(
+                "type"=>"pre paquete_final"
+            ));
             $paquete_final = AVSHME_calculate_package($table_package , $data_product);
 
+            AVSHME_addLogAveonline(array(
+                "type"=>"post paquete_final"
+            ));
             //generate request
             $request = array(
                 "token"             => $api->get_token(),
