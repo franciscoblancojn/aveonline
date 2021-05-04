@@ -26,6 +26,10 @@ function load_AveonlineAPI()
         }
         public function request($json , $url)
         {
+            AVSHME_addLogAveonline(array(
+                "type"=>"api send",
+                "send"=>json_decode($json)
+            ));
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => $url,
@@ -44,7 +48,7 @@ function load_AveonlineAPI()
             $response = curl_exec($curl);
             curl_close($curl);
             AVSHME_addLogAveonline(array(
-                "type"=>"api",
+                "type"=>"api respond",
                 "send"=>json_decode($json),
                 "respond"=>json_decode($response)
             ));
