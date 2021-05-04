@@ -26,10 +26,6 @@ function load_AveonlineAPI()
         }
         public function request($json , $url)
         {
-            AVSHME_addLogAveonline(array(
-                "type"=>"api send",
-                "send"=>json_decode($json)
-            ));
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => $url,
@@ -48,7 +44,7 @@ function load_AveonlineAPI()
             $response = curl_exec($curl);
             curl_close($curl);
             AVSHME_addLogAveonline(array(
-                "type"=>"api respond",
+                "type"=>"api",
                 "send"=>json_decode($json),
                 "respond"=>json_decode($response)
             ));
@@ -104,10 +100,6 @@ function load_AveonlineAPI()
                     "idlargo": "'.$data['paquete_final']->length.'"
                 }
             ';
-            AVSHME_addLogAveonline(array(
-                "type"=>"pre cotizar api",
-                "send"=>json_decode($json_body)
-            ));
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function AVSHME_generate_guia($data , $order)
