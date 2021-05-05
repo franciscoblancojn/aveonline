@@ -109,7 +109,7 @@ function AVSHME_relacion_envio_aveonline_page()
 {
     
     $rd_args_total = array(
-        'meta_key'      => 'relacion_envio',
+        'meta_key'      => 'enable_recogida',
         'meta_compare'  => 'EXISTS',
         'return'        => 'ids',
         'status'        => 'processing',
@@ -119,7 +119,7 @@ function AVSHME_relacion_envio_aveonline_page()
     $paged = (isset($_GET['paged'])) ? intval($_GET['paged']) : 1;
     $n_page = 10;
     $rd_args = array(
-        'meta_key'      => 'relacion_envio',
+        'meta_key'      => 'enable_recogida',
         'meta_compare'  => 'EXISTS',
         'return'        => 'ids',
         'status'        => 'processing',
