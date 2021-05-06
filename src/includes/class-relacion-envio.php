@@ -270,7 +270,17 @@ if (isset($_POST) && isset($_POST['relacion_de_envio'])) {
     $orders = array();
     for ($i=0; $i < count($order_ids); $i++) { 
         $metodo_envio = get_post_meta($order_ids[$i], 'metodo_envio', true);
-        $transportadora = get_post_meta($order_ids[$i], 'transportadora', true);
+        //$transportadora = get_post_meta($order_ids[$i], 'transportadora', true);
+        
+        $order = wc_get_order( $order_ids[$i] );
+        foreach ($order->get_items( 'shipping' ) as $item) {
+            foreach ($item->get_meta_data() as $data) {
+                $e[$data->get_data()["key"]] = json_decode(base64_decode($data->get_data()["value"]),true);
+            }
+        }
+        $request = $e['request'];
+        $transportadora    =  $request['idtransportador'];
+
         $orders[$metodo_envio][$transportadora][] =  $order_ids[$i];
     }
     $settings = AVSHME_get_settings_aveonline();
