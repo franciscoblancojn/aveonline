@@ -462,77 +462,48 @@ function aveonline_shipping_method() {
             }
         }
         public function calculate_shipping( $package = array()) {
-            //verifit activation
-            //if(!is_checkout())return;
-            // if($this->settings['enabled'] == 'no'){
-            //     return;
-            // }
             //load api
             $api = new AveonlineAPI($this->settings);
             //performat destination
             $destino = AVSHME_reajuste_code_aveonline(strtoupper($package["destination"]["city"]." (".$package["destination"]["state"].")"));
 
             if(AVSHME_get_code_aveonline($destino) == null)return;
-            //declare variable acumilative
-            $valordeclarado = 0;
-            $weight         = 0;
-            $quantity       = 0;
-
+            $productos = [];
             //recorre products
             foreach ($package["contents"] as $clave => $valor) {
                 if($valor['variation_id']!=0){
                     $valor["product_id"] = $valor['variation_id'];
                 }
                 $_product           = wc_get_product($valor["product_id"]);
-                $weight             += $_product->get_weight()*$valor["quantity"];
-                $quantity           += $valor["quantity"];
-
                 $_valor_declarado 	= get_post_meta($valor["product_id"],'_custom_valor_declarado' , true);
-
                 if(0==floatval($_valor_declarado)){
                     $_valor_declarado = $_product->get_price();
                 }
-                $valordeclarado	    += floatval($_valor_declarado) * floatval($valor["quantity"]);
-            
-                
-                $data_product[] = array(
-                    'id'      => $valor["product_id"],
-                    "length"  => $_product->get_length(),
-                    "width"   => $_product->get_width(),
-                    "height"  => $_product->get_height(),
-                    "quantity"=> $valor["quantity"],
+
+                $productos[] = array(
+                    "alto"              => $_product->get_height(),
+                    "largo"             => $_product->get_length(),
+                    "ancho"             => $_product->get_width(), 
+                    "peso"              => $_product->get_weight(), 
+                    "unidades"          => floatval($valor["quantity"]), 
+                    "valorDeclarado"    => floatval($_valor_declarado), 
                 );
             }
-            //load table packge configuration
-            $table_package = json_decode($this->settings['table_package']);
-
-            //calculate packge final
-            $paquete_final = AVSHME_calculate_package($table_package , $data_product);
 
             //generate request
             $request = array(
                 "token"             => $api->get_token(),
                 "destinos"          => $destino,
-                "quantity"          => $paquete_final->numeroPaquetes,
-                "weight"            => $weight,
-                "valor_declarado"   => $valordeclarado,
                 "contraentrega"     => 1,
                 "valorrecaudo"      => $package['cart_subtotal'],
                 "idasumecosto"      => 1,
-                "paquete_final"     => $paquete_final
+                "productos"         => $productos
             );
-
 
             //requeste api
             $r = $api->cotisar($request);
             //add rates
             $this->add_rate_request($r , $request);
-
-            //log
-            $value = array();
-            $value['send'] = json_encode($request);
-            $value['result'] = json_encode($r);
-            update_post_meta(9,'pre',$value);
         }
     }
     

@@ -82,24 +82,20 @@ function load_AveonlineAPI()
         }
         public function cotisar($data = array())
         {
-            $json_body = '
-                {
-                    "tipo":"cotizarDoble",
-                    "token":"'          . $data["token"] . '",
-                    "idempresa":"'      . $this->settings['select_cuenta']. '",
-                    "origen":"'         . explode('_',$this->settings['select_agentes'])[1] . '",
-                    "destino":"'        . $data["destinos"] . '",
-                    "unidades":"'       . $data["quantity"] . '",
-                    "kilos":"'          . $data["weight"] . '",
-                    "valordeclarado":"' . $data["valor_declarado"] . '",
-                    "contraentrega":"'  . $data["contraentrega"] . '",
-                    "valorrecaudo":"'   . $data["valorrecaudo"] . '",
-                    "idasumecosto":"'   . $data["idasumecosto"] . '",
-                    "idalto": "'.$data['paquete_final']->height.'",
-                    "idancho": "'.$data['paquete_final']->width.'",
-                    "idlargo": "'.$data['paquete_final']->length.'"
-                }
-            ';
+            $json_body = array(
+                "tipo"          => "cotizarDoble",
+                "access"        => "",
+                "token"         => $data["token"],
+                "idempresa"     => $this->settings['select_cuenta'],
+                "origen"        => explode('_',$this->settings['select_agentes'])[1],
+                "destino"       => $data["destinos"],
+                "idasumecosto"  => $data["idasumecosto"],
+                "contraentrega" => $data["contraentrega"],
+                "valorrecaudo"  => $data["valorrecaudo"],
+                "productos"     => $data["productos"],
+                "valorMinimo"   => 0
+            );
+            $json_body = json_encode($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);
         }
         public function AVSHME_generate_guia($data , $order)
