@@ -93,7 +93,7 @@ function load_AveonlineAPI()
                 "contraentrega" => $data["contraentrega"],
                 "valorrecaudo"  => $data["valorrecaudo"],
                 "productos"     => $data["productos"],
-                "valorMinimo"   => 0
+                "valorMinimo"   => ($this->settings['valorMinimo'] == "yes")?1:0
             );
             $json_body = json_encode($json_body);
             return $this->request($json_body , $this->API_URL_QUOTE);

@@ -182,16 +182,16 @@ function aveonline_shipping_method() {
                     'title' => __( 'Agentes'),
                 ),
                 'select_agentes' => $select_agentes,
-                'tag_Paquetes' => array(
+                'tag_valorMinimo' => array(
                     'id'    => 'tag',
                     'type'  => 'tag',
-                    'title' => __( 'Paquetes'),
+                    'title' => __( 'Valor Minimo'),
                 ),
-                'table_package' => array(
-                    'id'    => 'table_package',
-                    'type'  => 'table_package',
-                    'title' => __( 'Lista de Paquetes'),
-                    'desc_tip' => __( 'Lista de Paquetes' ),
+                'valorMinimo' => array(
+                    'title' => __( 'Habilitar/Deshabilitar' ),
+                    'type' => 'checkbox',
+                    'desc_tip' => __( 'Habilitar/Deshabilitar' ),
+                    'default' => 'no',
                 ),
             );
         }
