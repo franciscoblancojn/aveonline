@@ -101,70 +101,85 @@ function load_AveonlineAPI()
         public function AVSHME_generate_guia($data , $order)
         {
             $order_id = $order->get_id();
-            $dscontenido = "Productos: [";
+            $productos = [];
+            $dscontenido = "";
             foreach ( $order->get_items() as $item_id => $item ) {
-                $name = $item->get_name();
-                $dscontenido .= $name.", ";
+                $product_id         = $item->get_product_id();
+                $_product           = wc_get_product($product_id);
+                
+                $_valor_declarado 	= get_post_meta($product_id,'_custom_valor_declarado' , true);
+                if(0==floatval($_valor_declarado)){
+                    $_valor_declarado = $_product->get_price();
+                }
+                
+                $productos[] = array(
+                    "alto"              => $_product->get_height(),
+                    "largo"             => $_product->get_length(),
+                    "ancho"             => $_product->get_width(), 
+                    "peso"              => $_product->get_weight(), 
+                    "unidades"          => $item->get_quantity(),
+                    "nombre"            => $item->get_name(),
+                    "ref"               => $_product->get_sku(),
+                    "urlProducto"       => $_product->get_reviews_allowed(),
+                    "valorDeclarado"    => $_valor_declarado
+                );
+                $dscontenido .= $item->get_name().",";
             }
-            $dscontenido .= "]";
-            $json_body =  '
-            {
-                "tipo":"generarGuia",
-                "token":"'.             $this->get_token().'",
-                "idempresa":"'.         $this->settings['select_cuenta'].'",
+            $json_body = array(
+                "tipo"              => "generarGuia2",
+                "token"             => $this->get_token(),
+                "idempresa"         => $this->settings['select_cuenta'],
+                "codigo"            => "",
+                "dsclavex"          => "",
+                "plugin"            => "wordpress",
+
+                "origen"            => explode('_',$this->settings['select_agentes'])[1],
+                "dsdirre"           => $this->settings['dsdirre'],
+                "dsbarrioo"         => "",
+
+                "destino"           => $data['destinos'],
+                "dsdir"             => $order->get_billing_address_1(),
+                "dsbarrio"          => "",
+
+                "dsnitre"           => $this->settings['dsnitre'],
+                "dstelre"           => $this->settings['dstelre'],
+                "dscelularre"       => $this->settings['dscelularre'],
+                "dscorreopre"       => $this->settings['dscorreopre'],
+
+                "dsnit"             => get_post_meta( $order_id, '_cedula', true ),
+                "dsnombre"          => $order->get_shipping_first_name(),
+                "dsnombrecompleto"  => $order->get_formatted_billing_full_name(),
+                "dscorreop"         => $order->get_billing_email(),
+                "dstel"             => $order->get_billing_phone(),
+                "dscelular"         => $order->get_billing_phone(),
+
+                "idtransportador"   => $data['idtransportador'],
+
+                "unidades"          => 1,
+                "productos"         => $productos,
+
+                "dscontenido"       => $dscontenido,
+                "dscom"             => $order->get_customer_note(),
+
+                "idasumecosto"      => $data['idasumecosto'],
+                "contraentrega"     => $data['contraentrega'],
+                "valorrecaudo"      => $data['valorrecaudo'],
+
+                "idagente"          => explode('_',$this->settings['select_agentes'])[0],
                 
-                "origen":"'.            explode('_',$this->settings['select_agentes'])[1].'",
-                "dsdirre":"'.           $this->settings['dsdirre'].'",
-                "dsbarrioo":"",
-                
-                "destino":"'.           $data['destinos'].'",
-                "dsdir":"'.             $order->get_billing_address_1().'",
-                "dsbarrio":"",
+                "dsreferencia"      => "",
+                "dsordendecompra"   => "",
+                "bloquegenerarguia" => "1",
+                "relacion_envios"   => "1",
+                "enviarcorreos"     => "1",
+                "guiahija"          => "",
+                "accesoila"         => "",
+                "cartaporte"        => "",
+                "valorMinimo"       => ($this->settings['valorMinimo'] == "yes")?1:0
+            );
+            
+            $json_body = json_encode($json_body);
 
-                "dsnitre":"'.           $this->settings['dsnitre'].'",
-                "dstelre":"'.           $this->settings['dstelre'].'",
-                "dscelularre":"'.       $this->settings['dscelularre'].'",
-                "dscorreopre":"'.       $this->settings['dscorreopre'].'",
-                
-                "dsnit":"'.             get_post_meta( $order_id, '_cedula', true ) .'",
-                "dsnombre":"'.          $order->get_shipping_first_name().'",
-                "dsnombrecompleto":"'.  $order->get_formatted_billing_full_name().'",
-                "dscorreop":"'.         $order->get_billing_email().'",
-                "dstel":"'.             $order->get_billing_phone().'",
-                "dscelular":"'.         $order->get_billing_phone().'",
-
-                "idtransportador":"'.   $data['idtransportador'].'",
-
-                "idalto":"'.            $data['paquete_final']['height'].'",
-                "idancho":"'.           $data['paquete_final']['width'].'",
-                "idlargo":"'.           $data['paquete_final']['length'].'",
-
-                "unidades":"'.          $data['paquete_final']['numeroPaquetes'].'",
-                "kilos":"'.             $data['weight'].'",
-                "valordeclarado":"'.    $data['valor_declarado'].'",
-
-                "dscontenido":"'.       $dscontenido.'",
-                "dscom":"'.             $order->get_customer_note().'",
-
-                "idasumecosto":"'.      $data['idasumecosto'].'",
-                "contraentrega":"'.     $data['contraentrega'].'",
-                "valorrecaudo":"'.      $data['valorrecaudo'].'",
-
-                "idagente":"'.          explode('_',$this->settings['select_agentes'])[0].'",
-
-                "dsreferencia":"",
-                "dsordendecompra":"",
-                "bloquegenerarguia":"",
-                "relacion_envios":"",
-                "enviarcorreos":"",
-                "guiahija":"",
-                "accesoila":"",
-                "cartaporte":"",
-                "bloquegenerarguia":"1",
-                "enviarcorreos":"1",
-                "relacion_envios":"1"
-            }
-            ';
             $r = $this->request($json_body , $this->API_URL_QUOTE);
             $json_S = '{
                 "shop" : "'.get_bloginfo( 'name' ).'",
