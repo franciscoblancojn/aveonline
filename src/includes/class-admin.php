@@ -14,3 +14,4 @@ require_once plugin_dir_path( __FILE__ ) . 'class-shipping.php';
 require_once plugin_dir_path( __FILE__ ) . 'class-recogida.php';
 require_once plugin_dir_path( __FILE__ ) . 'class-relacion-envio.php';
 require_once plugin_dir_path( __FILE__ ) . 'option_page.php';
+require_once plugin_dir_path( __FILE__ ) . 'columns.php';
