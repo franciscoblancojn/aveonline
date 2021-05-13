@@ -1,7 +1,9 @@
 <?php
 function Aveonline_create_menu() {
 	add_menu_page('Aveonline Settings', 'Aveonline', 'administrator', __FILE__, 'Aveonline_settings_page' , plugins_url('../img/aveonline.png', __FILE__) );
-	add_action( 'admin_init', 'register_Aveonline_settings' );
+	add_submenu_page( __FILE__, 'Recogida', 'Recogida', 'administrator', 'options-general.php?page=recogida_aveonline');
+	add_submenu_page( __FILE__, 'Relacion de Envio', 'Relacion de Envio', 'administrator', 'options-general.php?page=relacion_envio_aveonline');
+    add_action( 'admin_init', 'register_Aveonline_settings' );
 }
 add_action('admin_menu', 'Aveonline_create_menu');
 
