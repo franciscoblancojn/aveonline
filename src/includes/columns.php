@@ -8,7 +8,6 @@ function AVSHME_new_order_column( $columns ) {
 
     $columns = array_merge($before, $after);
 
-    AVSHME_addLogAveonline($columns);
     return $columns;
 }
 add_filter( 'manage_edit-shop_order_columns', 'AVSHME_new_order_column' );
