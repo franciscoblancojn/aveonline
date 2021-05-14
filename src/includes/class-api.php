@@ -229,29 +229,19 @@ function load_AveonlineAPI()
         }
         public function generarRecogida($data)
         {
-            $tipoenvio = 3;
-            if ($data['kilos'] == 1 && $data['unidades'] == 1) {
-                $tipoenvio = 1;
-            }else if($data['kilos'] <= 8 && $data['unidades'] <= 10) {
-                $tipoenvio = 2;
-            }
-            $json_body = '
-            {
-                "tipo":"generarRecogida",
-                "token":"'.                 $this->get_token() .'",
-                "idempresa":"'.             $this->settings['select_cuenta'].'",
-                "idagente":"'.              explode('_',$this->settings['select_agentes'])[0].'",
-                "idtransportador":"'.       $data['idtransportador'].'",
-                "unidades":"'.              $data['unidades'].'",
-                "kilos":"'.                 $data['kilos'].'",
-                "valordeclarado":"'.        $data['valordeclarado'].'",
-                "fecharecogida":"'.         $data['fecharecogida'].'",
-                "dscom":"'.                 $data['dscom'].'",
-                "tipoenvio":"'.             $tipoenvio.'",    
-                "horainicial":"'.           $data['horainicial'].'",
-                "horafinal":"'.             $data['horafinal'].'"
-            }
-            ';
+            $json_body = array(
+                "tipo"              => "generarRecogida2",
+                "token"             => $this->get_token(),
+                "idempresa"         => $this->settings['select_cuenta'],
+                "idagente"          => explode('_',$this->settings['select_agentes'])[0],
+                "fecharecogida"     => "",
+                "horainicial"       => "",
+                "horafinal"         => "",
+                "dscom"             => $data['dscom'],
+                "guias"             => $data['guias']
+            );
+            $json_body = json_encode($json_body);
+
             $r = $this->request($json_body , $this->API_URL_QUOTE);
 
             $json_S = '{

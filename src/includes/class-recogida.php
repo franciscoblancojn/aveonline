@@ -59,68 +59,6 @@ function AVSHME_recogida_aveonline_page()
         }else{
             ?>
             <script>
-                function validarHoraDis1(horainicial , horafinal){
-                    horainicial = parseInt(horainicial.split(":")[0]) * 60 + parseInt(horainicial.split(":")[1])
-                    horafinal   = parseInt(horafinal.split(":")[0]) * 60 + parseInt(horafinal.split(":")[1])
-                    if(horafinal < horainicial){
-                        alert("HoraFinal no puede ser menor a HoraInical")
-                        return false;
-                    }
-                    if(horafinal - horainicial < 60){
-                        alert("Debe existir almenos una diferencia de una hora entre HoraFinal y HoraInicial")
-                        return false;
-                    }
-                    return true;
-                }
-                function validarFechaMenorActual(date) {
-                    var fecha = date.split("-");
-                    var ndate = new Date(date);
-                    var today = new Date();
-                    val_x = (parseInt(fecha[0])) + (parseInt(fecha[1]) / 100) + (parseInt(fecha[2]) / 10000)
-                    val_today = (today.getFullYear()) + ((today.getMonth() + 1) / 100) + (today.getDate() / 10000)
-                    if (ndate.getDay() == 6) {
-                        alert("No se permite el domingo")
-                        return false;
-                    } else if (val_today > val_x) {
-                        alert("Fecha inferiror al actual")
-                        return false;
-                    } else if (ndate.getDay() == 5 && val_today == val_x) {
-                        alert("Para solicitar recogida los sabados, Debes solicitarla mas tarar el Viener")
-                        return false;
-                    } else if (today.getHours() > 12 && val_today == val_x) {
-                        alert("Despues de las 12pm no se puede solicitar recogida el mismo dia")
-                        return false;
-                    }
-                    return true;
-                }
-        
-                function validate_fecha() {
-                    fecha_recogida      = document.getElementById('fecha_recogida')
-                    horainicial         = document.getElementById('horainicial')
-                    horafinal           = document.getElementById('horafinal')
-        
-                    if (fecha_recogida.value == "") {
-                        alert("Ingrese fecha de recogida");
-                        return false;
-                    }
-                    if (horainicial.value == "") {
-                        alert("Ingrese Hora Inicial");
-                        return false;
-                    }
-                    if (horafinal.value == "") {
-                        alert("Ingrese Hora final");
-                        return false;
-                    }
-                    if (!validarFechaMenorActual(fecha_recogida.value)) {
-                        return false;
-                    }
-                    if (!validarHoraDis1(horainicial.value , horafinal.value)) {
-                        return false;
-                    }
-        
-                    return true;
-                }
-        
                 function refes_order(order_id, result) {
                     if (result == null || result == "error") {
                         alert('Error')
@@ -134,27 +72,22 @@ function AVSHME_recogida_aveonline_page()
                     order.outerHTML = result
                 }
                 async function generar_recogida(e) {
-                    if (!validate_fecha()) return;
                     order_id = e.getAttribute('order_id')
+                    guia = e.getAttribute('guia')
                     var myHeaders = new Headers();
                     myHeaders.append("Cookie", "__cfduid=d23155ce328a4759efd2b35fde15da2211600376510");
         
                     var formdata = new FormData();
         
-                    fecha_recogida      = document.getElementById('fecha_recogida')
-                    horainicial         = document.getElementById('horainicial')
-                    horafinal           = document.getElementById('horafinal')
                     notas               = document.getElementById('notas')
                     if(notas.value.split(" ").join("")==""){
                         alert("Debes agregar Notas de envio")
                         return
                     }
                     formdata.append("order_id", order_id);
+                    formdata.append("guias", [guia]);
                     formdata.append("generar_recogida", 1);
-                    formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
                     formdata.append("notas", notas.value);
-                    formdata.append("horainicial", horainicial.value);
-                    formdata.append("horafinal", horafinal.value);
         
                     var requestOptions = {
                         method: 'POST',
@@ -169,12 +102,13 @@ function AVSHME_recogida_aveonline_page()
                         .catch(error => console.log('error', error));
                 }
                 async function generar_multiple() {
-                    if (!validate_fecha()) return;
                     select = document.documentElement.querySelectorAll("[id*='cb-select']:not([id='cb-select-all-1']):checked")
                     ids = []
+                    guias = []
                     for (let i = 0; i < select.length; i++) {
                         e = select[i];
                         ids[i] = e.getAttribute('order_id')
+                        guias[i] = e.getAttribute('guia')
                     }
         
                     var myHeaders = new Headers();
@@ -182,20 +116,15 @@ function AVSHME_recogida_aveonline_page()
         
                     var formdata = new FormData();
         
-                    fecha_recogida      = document.getElementById('fecha_recogida')
-                    horainicial         = document.getElementById('horainicial')
-                    horafinal           = document.getElementById('horafinal')
                     notas               = document.getElementById('notas')
                     if(notas.value.split(" ").join("")==""){
                         alert("Debes agregar Notas de envio")
                         return
                     }
                     formdata.append("order_ids", ids);
+                    formdata.append("guias", guias);
                     formdata.append("generar_recogida_multiple", 1);
-                    formdata.append("fecha_recogida", fecha_recogida.value.split('-').join('/'));
                     formdata.append("notas", notas.value);
-                    formdata.append("horainicial", horainicial.value);
-                    formdata.append("horafinal", horafinal.value);
         
                     var requestOptions = {
                         method: 'POST',
@@ -218,18 +147,6 @@ function AVSHME_recogida_aveonline_page()
                     <button onclick="generar_multiple()" class="button">
                         Generar Recogidas Seleccionadas
                     </button>
-                    <label for="" hidden>
-                        Fecha de recogida
-                        <input type="date" id="fecha_recogida" name="fecha_recogida" value="<?=date("Y-m-d");?>">
-                    </label>
-                    <label for="">
-                        Hora Inicial
-                        <input type="time" id="horainicial" name="horainicial" >
-                    </label>
-                    <label for="">
-                        Hora Final
-                        <input type="time" id="horafinal" name="horafinal" >
-                    </label>
                     <label for="">
                         Notas de Recogida
                         <input type="text" name="notas" id="notas" />
@@ -252,7 +169,6 @@ function AVSHME_recogida_aveonline_page()
                 <th scope="col" id="rotulo" class="manage-column column-rotulo">Rotulo</th>
                 <th scope="col" id="estado" class="manage-column column-estado">Estado</th>
                 <th scope="col" id="date" class="manage-column column-date">Fecha</th>
-                <th scope="col" id="date" class="manage-column column-date">Paquete</th>
                 <th scope="col" id="recogida" class="manage-column column-recogida">Generar Recogida</th>
             </tr>
         </thead>
@@ -334,7 +250,15 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
         iedit author-self level-0 post-<?= $order_id ?> type-post status-publish format-standard hentry category-uncategorized">
         <th scope="row" class="check-column" data-children-count="1">
             <label class="screen-reader-text" for="cb-select-<?= $order_id ?>"></label>
-            <input id="cb-select-<?= $order_id ?>" order_id="<?= $order_id ?>" type="checkbox" name="post[]" value="<?= $order_id ?>" <?php echo ($estado_recogida == null || !$swt)? '' : 'disabled' ?>>
+            <input 
+            id="cb-select-<?= $order_id ?>" 
+            order_id="<?= $order_id ?>" 
+            guia="<?= $guias_rotulos->numguia ?>" 
+            type="checkbox" 
+            name="post[]" 
+            value="<?= $order_id ?>" 
+            <?php echo ($estado_recogida == null || !$swt)? '' : 'disabled' ?>
+            />
             <div class="locked-indicator">
                 <span class="locked-indicator-icon" aria-hidden="true"></span>
                 <span class="screen-reader-text"></span>
@@ -371,16 +295,6 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
         <td class="date column-date" data-colname="Date">
             <span><?= $order->get_date_created()->format('d-m-y'); ?></span>
         </td>
-        <td class="date column-paquete" data-colname="paquete">
-            <?php
-            $paquete = get_post_meta($order_id, 'paquete_final', true);
-            if ($paquete != null) {
-                echo $paquete['length'] . "x" . $paquete['width'] . "x" . $paquete['height'];
-                echo "<br>";
-                echo "#N: " . $paquete['numeroPaquetes'];
-            }
-            ?>
-        </td>
         <td class="author column-recogida wp-core-ui" data-colname="Recogida">
             <?php
             if ($estado_recogida == null && $guias_rotulos->numguia!="000") {
@@ -395,7 +309,7 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
             ?>
         </td>
     </tr>
-<?php
+    <?php
 }
 
 
@@ -403,6 +317,7 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     require_once(preg_replace('/wp-content.*$/','',__DIR__).'wp-load.php');
 
     $order_id = $_POST['order_id'];
+    $guias = $_POST['guias'];
 
 
     $estado_recogida = get_post_meta($order_id, 'estado_recogida', true);
@@ -411,26 +326,11 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
         exit;
     }
     $order = wc_get_order( $order_id );
-    $method = $order->get_shipping_method();
     $settings = AVSHME_get_settings_aveonline();
     $api = new AveonlineAPI($settings);
-    foreach ($order->get_items( 'shipping' ) as $item) {
-        foreach ($item->get_meta_data() as $data) {
-            $e[$data->get_data()["key"]] = json_decode(base64_decode($data->get_data()["value"]),true);
-        }
-    }
-    if(!isset($e["request"])){
-        return;
-    }
-    $request = $e['request'];
+
     $data = array(
-        'idtransportador'   => $request['idtransportador'],
-        'unidades'          => $request['paquete_final']['numeroPaquetes'],
-        'kilos'             => $request['weight'],
-        'valordeclarado'    => $request['valor_declarado'],
-        'fecharecogida'     => $_POST['fecha_recogida'],
-        'horainicial'       => $_POST['horainicial'],
-        'horafinal'         => $_POST['horafinal'],
+        "guias"             => $guias,
         'dscom'             => $_POST['notas'],
     );
     
@@ -439,8 +339,6 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     if ($recogida->status == "ok") {
         update_post_meta($order_id, 'estado_recogida', "Generada");
         update_post_meta($order_id, 'relacion_envio', true);
-        update_post_meta($order_id, 'metodo_envio', $method);
-        update_post_meta($order_id, 'transportadora', $request['idtransportador']);
         AVSHME_show_order_by_table_recogida($order_id);
     } else {
         echo "error";
@@ -453,77 +351,28 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
     require_once(preg_replace('/wp-content.*$/','',__DIR__).'wp-load.php');
 
     $order_ids = $_POST['order_ids'];
+    $guias = $_POST['guias'];
     $order_ids = explode(",", $order_ids);
+    $guias = explode(",", $guias);
 
-    $tempArray = [];
-    for ($i = 0; $i < count($order_ids); $i++) {
-        $order_id = $order_ids[$i];
-        $order = wc_get_order($order_id);
-        $method = $order->get_shipping_method();
+    
+    $settings = get_option( 'woocommerce_wc_aveonline_shipping_settings' ); 
 
-        $tempArray[$method][] = $order_id;
-    }
-    foreach ($tempArray as $key => $value) {
-        $ids = $value;
-        $order_ids_final = [];
-        $arrayGuias = [];
+    $api = new AveonlineAPI($settings);
 
-        $unidades = 0;
-        $kilos = 0;
-        $valordeclarado = 0;
-        $idtransportador = 0;
-
-        for ($i = 0; $i < count($ids); $i++) {
-            $order = wc_get_order($ids[$i]);
-            $order_id = $order_ids[$i];
-            $estado_recogida        = get_post_meta($order_id, 'estado_recogida', true);
-
-            $arrayGuias[]           = get_post_meta($ids[$i], 'guias_rotulos', true);
-
-            if ("Generada" == $estado_recogida) {
-                echo "no change";
-            } else {
-
-                foreach ($order->get_items( 'shipping' ) as $item) {
-                    foreach ($item->get_meta_data() as $data) {
-                        $e[$data->get_data()["key"]] = json_decode(base64_decode($data->get_data()["value"]),true);
-                    }
-                }
-                $request = $e['request'];
-                $order_ids_final[] = $order_id;
-
-                $idtransportador    =  $request['idtransportador'];
-                $unidades           += intval($request['paquete_final']['numeroPaquetes']);
-                $kilos              += floatval($request['weight']);
-                $valordeclarado     += floatval($request['valor_declarado']);
-            }
+    $data = array(
+        "guias"             => $guias,
+        'dscom'             => $_POST['notas'],
+    );
+    $recogida = $api->generarRecogida($data);
+    
+    if ($recogida->status == "ok" ) {
+        for ($i = 0; $i < count($order_ids_final); $i++) {
+            update_post_meta($order_ids_final[$i], 'estado_recogida', "Generada");
+            update_post_meta($order_ids_final[$i], 'relacion_envio', true);
         }
-        $settings = get_option( 'woocommerce_wc_aveonline_shipping_settings' ); 
-
-        $api = new AveonlineAPI($settings);
-
-        $data = array(
-            'idtransportador'   => $idtransportador,
-            'unidades'          => $unidades,
-            'kilos'             => $kilos,
-            'valordeclarado'    => $valordeclarado,
-            'fecharecogida'     => $_POST['fecha_recogida'],
-            'horainicial'       => $_POST['horainicial'],
-            'horafinal'         => $_POST['horafinal'],
-            'dscom'             => $_POST['notas'],
-        );
-        $recogida = $api->generarRecogida($data);
-        
-        if ($recogida->status == "ok" ) {
-            for ($i = 0; $i < count($order_ids_final); $i++) {
-                update_post_meta($order_ids_final[$i], 'estado_recogida', "Generada");
-                update_post_meta($order_ids_final[$i], 'relacion_envio', true);
-                update_post_meta($order_ids_final[$i], 'metodo_envio', $key);
-                update_post_meta($order_ids_final[$i], 'transportadora', $idtransportador);
-            }
-        } else {
-            echo "error";
-        }
+    } else {
+        echo "error";
     }
     exit;
 }
