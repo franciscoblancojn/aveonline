@@ -234,9 +234,6 @@ function load_AveonlineAPI()
                 "token"             => $this->get_token(),
                 "idempresa"         => $this->settings['select_cuenta'],
                 "idagente"          => explode('_',$this->settings['select_agentes'])[0],
-                "fecharecogida"     => "",
-                "horainicial"       => "",
-                "horafinal"         => "",
                 "dscom"             => $data['dscom'],
                 "guias"             => $data['guias']
             );
