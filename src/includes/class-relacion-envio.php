@@ -56,11 +56,6 @@ function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
                     #<?= $order_id ?>
                 </a>
             </strong>
-            <pre>
-                <?php
-                    var_dump(get_post_meta( $order_id, '_shipping', true));
-                ?>
-            </pre>
         </td>
 
         <td class="author column-guia" data-colname="Guia">
@@ -103,12 +98,20 @@ function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
 }
 function AVSHME_relacion_envio_aveonline_page()
 {
-
-    $rd_args_total = array(
-        'meta_key'   =>  'enable_recogida',             
-        'meta_compare' => 'EXISTS',  
+    $rd_args_nonde = array(
+        'meta_key'      => 'enable_recogida',             
+        'meta_compare'  => 'NOT EXISTS',  
         'return'        => 'ids',
         'status'        => 'processing',
+    );
+    $order_none = wc_get_orders($rd_args_nonde);
+
+    $rd_args_total = array(
+        'meta_key'      =>  'enable_recogida',             
+        'meta_compare'  => 'EXISTS',  
+        'return'        => 'ids',
+        'status'        => 'processing',
+        'exclude'       => $order_none,
     );
 
     if(isset($_GET["pen"]) && $_GET["pen"]==1){
@@ -118,19 +121,21 @@ function AVSHME_relacion_envio_aveonline_page()
         $rd_args_total['meta_key'] = "relacion_envio_generada";
     }
     $customer_orders_total = wc_get_orders($rd_args_total);
-    var_dump($customer_orders_total);
+    
     $paged = (isset($_GET['paged'])) ? intval($_GET['paged']) : 1;
     $n_page = 10;
     $rd_args = array(
-        'meta_key'                  =>  'enable_recogida',              
+        'meta_key'                  => 'enable_recogida',              
         'meta_compare'              => 'EXISTS',  
         'return'                    => 'ids',
+        'fields'                    => 'ids',
         'status'                    => 'processing',
         'nopaging'                  => false,
         'paged'                     => '1',
         'posts_per_page'            => $n_page,
         'posts_per_archive_page'    => $n_page,
         'offset'                    => $n_page * ($paged - 1),
+        'exclude'       => $order_none,
     );
     
 
