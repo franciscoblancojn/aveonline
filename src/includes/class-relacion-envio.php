@@ -35,6 +35,7 @@ function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
     $estado_recogida = get_post_meta($order_id, 'estado_recogida', true);
     $relacion_envio_generada = get_post_meta( $order_id, 'relacion_envio_generada', true );
     $rutaimpresion = get_post_meta( $order_id, 'rutaimpresion', true );
+
     ?>
     <tr id="post-<?= $order_id ?>" class="<?= ($estado_recogida == null) ? "no_generado_recogida" : "" ?>
         iedit author-self level-0 post-<?= $order_id ?> type-post status-publish format-standard hentry category-uncategorized">
@@ -55,6 +56,11 @@ function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
                     #<?= $order_id ?>
                 </a>
             </strong>
+            <pre>
+                <?php
+                    var_dump(get_post_meta( $order_id, '_shipping', true));
+                ?>
+            </pre>
         </td>
 
         <td class="author column-guia" data-colname="Guia">
@@ -92,48 +98,52 @@ function AVSHME_show_order_by_table_relacion_envia($order_id , $swt = true)
         <td class="date column-date" data-colname="Date">
             <span><?= $order->get_date_created()->format('d-m-y'); ?></span>
         </td>
-        <td class="date column-paquete" data-colname="paquete">
-            <?php
-            $paquete = get_post_meta($order_id, 'paquete_final', true);
-            if ($paquete != null) {
-                echo $paquete['length'] . "x" . $paquete['width'] . "x" . $paquete['height'];
-                echo "<br>";
-                echo "#N: " . $paquete['numeroPaquetes'];
-            }
-            ?>
-        </td>
     </tr>
 <?php
 }
 function AVSHME_relacion_envio_aveonline_page()
 {
-    
+
     $rd_args_total = array(
-        'meta_key'      => 'enable_recogida',
-        'meta_compare'  => 'EXISTS',
+        'meta_key'   =>  'enable_recogida',             
+        'meta_compare' => 'EXISTS',  
         'return'        => 'ids',
         'status'        => 'processing',
     );
-    $customer_orders_total = wc_get_orders($rd_args_total);
 
+    if(isset($_GET["pen"]) && $_GET["pen"]==1){
+        $rd_args_total['meta_key'] = "relacion_envio_generada";
+        $rd_args_total['meta_compare'] = "NOT EXISTS";
+    }else if(isset($_GET["com"]) && $_GET["com"]==1){
+        $rd_args_total['meta_key'] = "relacion_envio_generada";
+    }
+    $customer_orders_total = wc_get_orders($rd_args_total);
+    var_dump($customer_orders_total);
     $paged = (isset($_GET['paged'])) ? intval($_GET['paged']) : 1;
     $n_page = 10;
     $rd_args = array(
-        'meta_key'      => 'enable_recogida',
-        'meta_compare'  => 'EXISTS',
-        'return'        => 'ids',
-        'status'        => 'processing',
-
+        'meta_key'                  =>  'enable_recogida',              
+        'meta_compare'              => 'EXISTS',  
+        'return'                    => 'ids',
+        'status'                    => 'processing',
         'nopaging'                  => false,
         'paged'                     => '1',
         'posts_per_page'            => $n_page,
         'posts_per_archive_page'    => $n_page,
         'offset'                    => $n_page * ($paged - 1),
     );
-    $customer_orders = wc_get_orders($rd_args);
     
+
+    if(isset($_GET["pen"]) && $_GET["pen"]==1){
+        $rd_args['meta_key'] = "relacion_envio_generada";
+        $rd_args['meta_compare'] = "NOT EXISTS";
+    }else if(isset($_GET["com"]) && $_GET["com"]==1){
+        $rd_args['meta_key'] = "relacion_envio_generada";
+    }
+    $customer_orders = wc_get_orders($rd_args);
     ?>
     <h2 class="screen-reader-text">Orders</h2>
+    
     <style>
         .column-recogida{
             display:none;
@@ -172,9 +182,18 @@ function AVSHME_relacion_envio_aveonline_page()
     </script>
     <div class="wp-core-ui">
         <p>
-            <button onclick="relacion_de_envio()" class="button">
+            <button onclick="relacion_de_envio()" class="button" style="margin-right:50px">
                 Relacion de Envio
             </button>
+            <a href="<?=get_admin_url()?>options-general.php?page=relacion_envio_aveonline" class="button">
+                All
+            </a>
+            <a href="<?=get_admin_url()?>options-general.php?page=relacion_envio_aveonline&&pen=1" class="button">
+                Pendientes
+            </a>
+            <a href="<?=get_admin_url()?>options-general.php?page=relacion_envio_aveonline&&com=1" class="button">
+                Completadas
+            </a>
         </p>
     </div>
     <table class="wp-list-table widefat fixed striped posts">
@@ -191,7 +210,6 @@ function AVSHME_relacion_envio_aveonline_page()
                 <th scope="col" id="rotulo" class="manage-column column-relacion_envio">Relacion de Envio</th>
                 <th scope="col" id="estado" class="manage-column column-estado">Estado</th>
                 <th scope="col" id="date" class="manage-column column-date">Fecha</th>
-                <th scope="col" id="date" class="manage-column column-date">Paquete</th>
             </tr>
         </thead>
 
@@ -211,6 +229,11 @@ function AVSHME_relacion_envio_aveonline_page()
             <span class="pagination-links">
                 <?php
                 $url_base = get_site_url()."/wp-admin/options-general.php?page=recogida_aveonline&paged=";
+                if(isset($_GET["pen"]) && $_GET["pen"]==1){
+                    $url_base = get_site_url()."/wp-admin/options-general.php?page=recogida_aveonline&pen=1&paged=";
+                }else if(isset($_GET["com"]) && $_GET["com"]==1){
+                    $url_base = get_site_url()."/wp-admin/options-general.php?page=recogida_aveonline&com=1&paged=";
+                }
                 $url_void = "javascript:void(0)";
                 $paged_all = ceil(count($customer_orders_total) / $n_page);
 
