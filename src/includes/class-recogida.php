@@ -169,7 +169,6 @@ function AVSHME_recogida_aveonline_page()
                 <th scope="col" id="rotulo" class="manage-column column-rotulo">Rotulo</th>
                 <th scope="col" id="estado" class="manage-column column-estado">Estado</th>
                 <th scope="col" id="date" class="manage-column column-date">Fecha</th>
-                <th scope="col" id="recogida" class="manage-column column-recogida">Generar Recogida</th>
             </tr>
         </thead>
 
@@ -295,19 +294,6 @@ function AVSHME_show_order_by_table_recogida($order_id , $swt = true)
         <td class="date column-date" data-colname="Date">
             <span><?= $order->get_date_created()->format('d-m-y'); ?></span>
         </td>
-        <td class="author column-recogida wp-core-ui" data-colname="Recogida">
-            <?php
-            if ($estado_recogida == null && $guias_rotulos->numguia!="000") {
-            ?>
-                <p>
-                    <button order_id="<?= $order_id ?>" onclick="generar_recogida(this)" class="button">
-                        Generar
-                    </button>
-                </p>
-            <?php
-            }
-            ?>
-        </td>
     </tr>
     <?php
 }
@@ -336,10 +322,15 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     
     $recogida = $api->generarRecogida($data);
     
-    if ($recogida->status == "ok") {
-        update_post_meta($order_id, 'estado_recogida', "Generada");
-        update_post_meta($order_id, 'relacion_envio', true);
-        AVSHME_show_order_by_table_recogida($order_id);
+    if (count($recogida->respuestasRecogida) > 0) {
+        for ($i=0; $i < count($recogida->respuestasRecogida); $i++) { 
+            $status = $recogida->respuestasRecogida[$i]->status;
+            $guias = $recogida->respuestasRecogida[$i]->guias;
+            if($status == "ok"){
+                update_post_meta($order_id, 'estado_recogida', "Generada");
+                update_post_meta($order_id, 'relacion_envio', true);
+            }
+        }
     } else {
         echo "error";
     }
@@ -355,6 +346,10 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
     $order_ids = explode(",", $order_ids);
     $guias = explode(",", $guias);
 
+    $guiasOrder = array();
+    for ($i=0; $i < count($guias); $i++) { 
+        $guiasOrder[$guias[$i]] = $order_ids[$i];
+    }
     
     $settings = get_option( 'woocommerce_wc_aveonline_shipping_settings' ); 
 
@@ -366,10 +361,17 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
     );
     $recogida = $api->generarRecogida($data);
     
-    if ($recogida->status == "ok" ) {
-        for ($i = 0; $i < count($order_ids_final); $i++) {
-            update_post_meta($order_ids_final[$i], 'estado_recogida', "Generada");
-            update_post_meta($order_ids_final[$i], 'relacion_envio', true);
+    if (count($recogida->respuestasRecogida) > 0) {
+        for ($i=0; $i < count($recogida->respuestasRecogida); $i++) { 
+            $status = $recogida->respuestasRecogida[$i]->status;
+            $guias = $recogida->respuestasRecogida[$i]->guias;
+            if($status == "ok"){
+                for ($j=0; $j < count($guias); $j++) { 
+                    $order_id = $guiasOrder[$guias[$i]];
+                    update_post_meta($order_id, 'estado_recogida', "Generada");
+                    update_post_meta($order_id, 'relacion_envio', true);
+                }
+            }
         }
     } else {
         echo "error";
