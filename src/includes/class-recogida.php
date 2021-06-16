@@ -81,6 +81,7 @@ function AVSHME_recogida_aveonline_page()
                     border:10px solid #1d2327;
                     border-top-color:transparent;
                     animation: ani360 5s infinite;
+                    border-radius:100%;
                 }
                 @keyframes ani360{
                     to{
