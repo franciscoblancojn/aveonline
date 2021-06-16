@@ -153,6 +153,34 @@ function AVSHME_relacion_envio_aveonline_page()
         .column-recogida{
             display:none;
         }
+        body.load:before,
+        body.load:after{
+            content:"";
+            position: fixed;
+            top:0;
+            left:0;
+            right: 0;
+            bottom:0;
+            margin:auto;
+            z-index: 999999999999;
+        }
+        body.load:before{
+            width:100%;
+            height:100%;
+            background:#ffffff80;
+        }
+        body.load:after{
+            width:150px;
+            height:150px;
+            border:10px solid #1d2327;
+            border-top-color:transparent;
+            animation: ani360 5s infinite;
+        }
+        @keyframes ani360{
+            to{
+                transform: rotateZ(360deg);
+            }
+        }
     </style>
     <script>
         async function relacion_de_envio() {
@@ -175,7 +203,7 @@ function AVSHME_relacion_envio_aveonline_page()
                 body: formdata,
                 redirect: 'follow'
             };
-
+            document.body.classList.add("load");
             await fetch("<?= plugin_dir_url(__FILE__) ?>class-relacion-envio.php", requestOptions)
                 .then(response => response.text())
                 .then(result => {

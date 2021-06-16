@@ -58,6 +58,36 @@ function AVSHME_recogida_aveonline_page()
             echo "<h1>No pueden generarce recogidas despues de las 11am</h1>";
         }else{
             ?>
+            <style>
+                body.load:before,
+                body.load:after{
+                    content:"";
+                    position: fixed;
+                    top:0;
+                    left:0;
+                    right: 0;
+                    bottom:0;
+                    margin:auto;
+                    z-index: 999999999999;
+                }
+                body.load:before{
+                    width:100%;
+                    height:100%;
+                    background:#ffffff80;
+                }
+                body.load:after{
+                    width:150px;
+                    height:150px;
+                    border:10px solid #1d2327;
+                    border-top-color:transparent;
+                    animation: ani360 5s infinite;
+                }
+                @keyframes ani360{
+                    to{
+                        transform: rotateZ(360deg);
+                    }
+                }
+            </style>
             <script>
                 function refes_order(order_id, result) {
                     if (result == null || result == "error") {
@@ -96,9 +126,14 @@ function AVSHME_recogida_aveonline_page()
                         redirect: 'follow'
                     };
         
+                    document.body.classList.add("load");
                     await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
                         .then(response => response.text())
-                        .then(result => refes_order(order_id, result))
+                        .then(result => {
+                            refes_order(order_id, result)
+
+                            document.body.classList.remove("load");
+                        })
                         .catch(error => console.log('error', error));
                 }
                 async function generar_multiple() {
@@ -133,6 +168,8 @@ function AVSHME_recogida_aveonline_page()
                         redirect: 'follow'
                     };
                     //window.location.reload()
+                    
+                    document.body.classList.add("load");
                     await fetch("<?= plugin_dir_url(__FILE__) ?>class-recogida.php", requestOptions)
                         .then(response => response.text())
                         .then(result =>{
