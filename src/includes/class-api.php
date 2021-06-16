@@ -252,13 +252,22 @@ function load_AveonlineAPI()
         }
         public function system_update_guia($data)
         {
+            $order = wc_get_order( $data["order_id"] );
+            foreach ($order->get_items( 'shipping' ) as $item) {
+                foreach ($item->get_meta_data() as $data) {
+                    $e[$data->get_data()["key"]] = json_decode(base64_decode($data->get_data()["value"]),true);
+                }
+            }
+            $request = $e['request'];
+            $transportadora    =  $request['idtransportador'];
             $json_body = '
             {
                 "tipo" : "guardarPedidos",
                 "ruta":"'.              plugin_dir_url( __FILE__ ).$this->URL_UPDATE_GUIA.'",
                 "guia":"'.              $data["numguia"].'",
                 "pedido_id":"'.         $data["order_id"].'",
-                "cliente_id" : "'.      $this->settings['select_cuenta'].'"
+                "cliente_id" : "'.      $this->settings['select_cuenta'].'",
+                "transportadora_id": "'.$transportadora.'"
             }
             ';
             return $this->request($json_body , $this->API_URL_UPDATE_GUIA);
