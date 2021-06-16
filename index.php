@@ -26,6 +26,7 @@ Copyright 2020 Startsco, Inc.
 //     exit;
 // }
 //AVSHME_
+define("AVSHME_LOG",false);
 
 if ( ! function_exists( 'is_plugin_active' ) )
     require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
