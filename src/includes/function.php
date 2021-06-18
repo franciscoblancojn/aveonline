@@ -5,6 +5,7 @@ function AVSHME_get_settings_aveonline(){
 function AVSHME_reajuste_code_aveonline($e){
     //casos especiales
     $casos_especiales = array(
+        "BOGOTá D.C (CUN)"              =>"BOGOTA(CUNDINAMARCA)",
         "CARTAGENA (BOL)"               =>"CARTAGENA DE INDIAS(BOLIVAR)",
         "PUERTO RICO - TIQUISIO (BOL)"  =>"PUERTO RICO(BOLIVAR)",
         "SAN ESTANISLAO (BOL)"          =>"SAN ESTANISLAO ARENAL(BOLIVAR)",
