@@ -55,7 +55,7 @@ function AVSHME_recogida_aveonline_page()
     <?php
         $HG = date("G");
         if($HG >=11){
-            echo "<h1>No pueden generarce recogidas despues de las 11am</h1>";
+            echo "<h1>No pueden generarse recogidas despues de las 11am</h1>";
         }else{
             ?>
             <style>
