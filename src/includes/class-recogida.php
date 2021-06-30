@@ -362,7 +362,7 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     
     if (count($recogida->guias) > 0) {
         for ($i=0; $i < count($recogida->guias); $i++) { 
-            $order_id = $recogida->guias[$i]->dsconsec;
+            // $order_id = $recogida->guias[$i]->dsconsec;
             $status = $recogida->guias[$i]->status;
             if($status == "ok"){
                 update_post_meta($order_id, 'estado_recogida', "Generada");
@@ -378,7 +378,8 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
 if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
     
     require_once(preg_replace('/wp-content.*$/','',__DIR__).'wp-load.php');
-
+    $listOrdersIds = $_POST['order_ids'];
+    $listGuias = $_POST['guias'];
     $order_ids = $_POST['order_ids'];
     $guias = $_POST['guias'];
     $order_ids = explode(",", $order_ids);
@@ -400,7 +401,8 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
     $recogida = $api->generarRecogida($data);
     if (count($recogida->guias) > 0) {
         for ($i=0; $i < count($recogida->guias); $i++) { 
-            $order_id = $recogida->guias[$i]->dsconsec;
+            // $order_id = $recogida->guias[$i]->dsconsec;
+            $order_id = $listOrdersIds[array_search ($recogida->guias[$i]->dsconsec, $listGuias)];
             $status = $recogida->guias[$i]->status;
             if($status == "ok"){
                 update_post_meta($order_id, 'estado_recogida', "Generada");

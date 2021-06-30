@@ -31,7 +31,7 @@ function AVSHME_generate_guia($order_id){
         AVSHME_addLogAveonline($guia);
         update_post_meta( $order_id, 'enable_recogida', true);
         update_post_meta( $order_id, 'guias_rotulos', $guia);
-        update_post_meta( $order_id, 'paquete_final', $e["request"]['paquete_final'] );
+        // update_post_meta( $order_id, 'paquete_final', $e["request"]['paquete_final'] );
         $respond = $api->system_update_guia(array(
             'numguia'   => $guia->numguia,
             'order_id'  => $order_id,
