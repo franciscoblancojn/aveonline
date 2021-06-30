@@ -360,10 +360,10 @@ if (isset($_POST) && isset($_POST['generar_recogida'])) {
     
     $recogida = $api->generarRecogida($data);
     
-    if (count($recogida->respuestasRecogida) > 0) {
-        for ($i=0; $i < count($recogida->respuestasRecogida); $i++) { 
-            $status = $recogida->respuestasRecogida[$i]->status;
-            $guias = $recogida->respuestasRecogida[$i]->guias;
+    if (count($recogida->guias) > 0) {
+        for ($i=0; $i < count($recogida->guias); $i++) { 
+            $order_id = $recogida->guias[$i]->dsconsec;
+            $status = $recogida->guias[$i]->status;
             if($status == "ok"){
                 update_post_meta($order_id, 'estado_recogida', "Generada");
                 update_post_meta($order_id, 'relacion_envio', true);
@@ -398,17 +398,13 @@ if (isset($_POST) && isset($_POST['generar_recogida_multiple'])) {
         'dscom'             => $_POST['notas'],
     );
     $recogida = $api->generarRecogida($data);
-    
-    if (count($recogida->respuestasRecogida) > 0) {
-        for ($i=0; $i < count($recogida->respuestasRecogida); $i++) { 
-            $status = $recogida->respuestasRecogida[$i]->status;
-            $guias = $recogida->respuestasRecogida[$i]->guias;
+    if (count($recogida->guias) > 0) {
+        for ($i=0; $i < count($recogida->guias); $i++) { 
+            $order_id = $recogida->guias[$i]->dsconsec;
+            $status = $recogida->guias[$i]->status;
             if($status == "ok"){
-                for ($j=0; $j < count($guias); $j++) { 
-                    $order_id = $guiasOrder[$guias[$i]];
-                    update_post_meta($order_id, 'estado_recogida', "Generada");
-                    update_post_meta($order_id, 'relacion_envio', true);
-                }
+                update_post_meta($order_id, 'estado_recogida', "Generada");
+                update_post_meta($order_id, 'relacion_envio', true);
             }
         }
     } else {
