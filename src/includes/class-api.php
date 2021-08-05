@@ -15,7 +15,7 @@ function load_AveonlineAPI()
         private $API_URL_CITY           = "https://aveonline.co/api/box/v1.0/ciudad.php";
         private $API_URL_QUOTE          = "https://aveonline.co/api/nal/v1.0/generarGuiaTransporteNacional.php";
         private $API_URL_UPDATE_GUIA    = "https://aveonline.co/api/nal/v1.0/plugins/wordpress.php";
-        private $APY_URL_ST             = "https://apiave.startscoinc.com/dev/";
+        private $APY_URL_ST             = "https://apiave.startscoinc.com/".((AVSHME_LOG)?"dev":"app")."/";
 
 
         private $URL_UPDATE_GUIA        = 'action-update-guia.php';
@@ -147,7 +147,7 @@ function load_AveonlineAPI()
                 "dscorreopre"       => $this->settings['dscorreopre'],
 
                 "dsnit"             => get_post_meta( $order_id, '_cedula', true ),
-                "dsnombre"          => $order->get_shipping_first_name(),
+                "dsnombre"          => $order->get_billing_first_name(),
                 "dsnombrecompleto"  => $order->get_formatted_billing_full_name(),
                 "dscorreop"         => $order->get_billing_email(),
                 "dstel"             => $order->get_billing_phone(),
