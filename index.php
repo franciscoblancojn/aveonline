@@ -7,7 +7,7 @@ Plugin Name: Aveonline Shipping
 Plugin URI: https://startscoinc.com/es/woocommerceaveonlineshipping
 Description: Integración de woocommerce con los servicios de envío de Aveonline.
 Author: Startsco
-Version: 0.1
+Version: 1.21.9.17
 Author URI: https://startscoinc.com/es/#
 License: 
 Text Domain: wc-aveonline-shipping
