@@ -19,33 +19,18 @@ License...
 Copyright 2020 Startsco, Inc.
  */
 
-// Make sure we don't expose any info if called directly
+require 'plugin-update-checker/plugin-update-checker.php';
+$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'https://gitlab.com/franciscoblancojn/aveonline',
+	__FILE__,
+	'elios'
+);
+$myUpdateChecker->setAuthentication('MqiAAZzo9WNBAGzgwc3L');
+$myUpdateChecker->setBranch('master');
 
-// if (!function_exists('add_action')) {
-//     echo 'Hi there!  I\'m just a plugin, not much I can do when called directly.';
-//     exit;
-// }
+
 //AVSHME_
 define("AVSHME_LOG",false);
 
 require_once plugin_dir_path( __FILE__ ) . 'departamentos_ciudades/departamentos-y-ciudades-de-colombia-para-woocommerce.php';
 require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-admin.php';
-
-/*
-if ( ! function_exists( 'is_plugin_active' ) )
-    require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-if(is_plugin_active( 'departamentos-y-ciudades-de-colombia-para-woocommerce/departamentos-y-ciudades-de-colombia-para-woocommerce.php' )){
-    require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-admin.php';
-}else{
-    function AVSHME_log_dependencia() {
-        ?>
-        <div class="notice notice-error is-dismissible">
-            <p>
-            Aveonline Shipping requiere el plugin  "Departamentos y Ciudades de Colombia para Woocommerce"
-            </p>
-        </div>
-        <?php
-    }
-    add_action( 'admin_notices', 'AVSHME_log_dependencia' );
-}
-*/
