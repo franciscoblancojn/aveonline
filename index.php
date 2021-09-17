@@ -28,6 +28,10 @@ Copyright 2020 Startsco, Inc.
 //AVSHME_
 define("AVSHME_LOG",false);
 
+require_once plugin_dir_path( __FILE__ ) . 'departamentos_ciudades/departamentos-y-ciudades-de-colombia-para-woocommerce.php';
+require_once plugin_dir_path( __FILE__ ) . 'src/includes/class-admin.php';
+
+/*
 if ( ! function_exists( 'is_plugin_active' ) )
     require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 if(is_plugin_active( 'departamentos-y-ciudades-de-colombia-para-woocommerce/departamentos-y-ciudades-de-colombia-para-woocommerce.php' )){
@@ -44,3 +48,4 @@ if(is_plugin_active( 'departamentos-y-ciudades-de-colombia-para-woocommerce/depa
     }
     add_action( 'admin_notices', 'AVSHME_log_dependencia' );
 }
+*/
